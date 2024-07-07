@@ -1,0 +1,80 @@
+﻿@model ManageCash
+
+<form method="post" asp-area="Accounts" asp-controller="DailyCash" asp-action="UpsertPaySupplier">
+    <input asp-for="Id" hidden />
+    <input asp-for="ShopId" hidden />
+    <input asp-for="CreatedBy" hidden />
+
+    <div class="row">
+        <div class="col-12">
+            <div class="border p-3 mt-4 row">
+                <div class="col-12 pb-2">
+                    <h2 class="text-primary">@(Model.Id != 0 ? "Update" : "Create")  Credit / Debit</h2>
+                    <hr />
+                </div>
+                <div class="col-3">
+                    <div class="mb-3">
+                        <label asp-for="SupplierId"></label>
+                        <select asp-for="SupplierId" asp-items="@ViewBag.SupplierList" required class="form-control" autofocus>
+                            <option selected disabled>Select</option>
+                        </select>
+                        <span asp-validation-for="SupplierId" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="mb-3">
+                        <label asp-for="Credit"></label>
+                        <input asp-for="Credit" class="form-control" autofocus />
+                        <span asp-validation-for="Credit" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="mb-3">
+                        <label asp-for="Debit"></label>
+                        <input asp-for="Debit" class="form-control" autofocus />
+                        <span asp-validation-for="Debit" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="mb-3">
+                        <label asp-for="PaymentDate"></label>
+                        <input asp-for="PaymentDate" class="form-control" autofocus />
+                        <span asp-validation-for="PaymentDate" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-2">
+                    @if (Model.Id != 0)
+                    {
+                        <div class="mb-3">
+                            <label asp-for="IsDisable" class="form-check-label">
+                                @Html.DisplayNameFor(model => model.IsDisable)
+                                <input asp-for="IsDisable" class="form-control form-check-input" />
+                            </label>
+                            <span asp-validation-for="IsDisable" class="text-danger"></span>
+                        </div>
+                    }
+                </div>
+
+                <div class="col-12">
+                    @if (Model.Id != 0)
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Update</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Create</button>
+                    }
+                    <a asp-controller="DailyCash" asp-action="IndexSupplierCash" class="btn btn-secondary" style="width:150px">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts{
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

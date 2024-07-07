@@ -1,0 +1,58 @@
+﻿@model Catalog
+
+<form method="post" asp-area="ProductManagement" asp-controller="Catalog" asp-action="Upsert">
+    <input asp-for="Id" hidden />
+
+    <div class="row">
+        <div class="col-12">
+            <div class="border p-3 mt-4 row">
+                <div class="col-12 pb-2">
+                    <h2 class="text-primary">@(Model.Id != 0 ? "Update" : "Create")  Catalog</h2>
+                    <hr />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Name"></label>
+                    <input asp-for="Name" class="form-control" autofocus />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="LocationId"></label>
+                    <select asp-for="LocationId" asp-items="@ViewBag.LoctionList" class="form-select">
+                        <option disabled selected>--Select--</option>
+                    </select>
+                    <span asp-validation-for="LocationId" class="text-danger"></span>
+                </div>
+                @if (Model.Id != 0)
+                {
+                    <div class="mb-3">
+                        <label asp-for="IsDisable" class="form-check-label">
+                            <input asp-for="IsDisable" class="form-control form-check-input" /> @Html.DisplayNameFor(model => model.IsDisable)
+                        </label>
+                        <span asp-validation-for="IsDisable" class="text-danger"></span>
+                    </div>
+                }
+                <div class="col-12">
+                    @if (Model.Id != 0)
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Update</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Create</button>
+                        @*<button type="submit" onclick="return ValidateInput()" class="btn btn-primary" style="width:150px">Create</button>*@
+                    }
+                    <a asp-controller="Catalog" asp-action="Index" class="btn btn-secondary" style="width:150px">
+                        Back to List
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts{
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

@@ -1,0 +1,43 @@
+﻿@model StockTransferVM
+
+<div class="col-lg-3 col-sm-6">
+    <div class="card gradient-1" style="height:100%">
+        <div class="card-body p-3">
+            <h5 class="card-title text-white">Filter by Date</h5>
+            <div class="row">
+                <div class="col-lg-6">
+                    <p class="mb-0">From Date </p>
+                    <input asp-for="RegDateFrom" class="form-control searchDate col-6" placeholder="Registered From" />
+                </div>
+                <div class="col-lg-6">
+                    <p class="mb-0">To Date </p>
+                    <input asp-for="RegDateTo" class="form-control searchDate col-6" placeholder="Registered To" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-2 col-sm-6">
+    <div class="card gradient-7" style="height:100%">
+        <div class="card-body  p-3">
+            <h5 class="card-title text-white">Filter by Supplier</h5>
+            <div>
+                <p class="mb-0">Supplier</p>
+                <select asp-for="StockTransfer.SupplierId" asp-items="@Model.SupplierList" class="form-control searchDrp"><option selected disabled>- Select -</option></select>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-lg-5 col-sm-6">
+    <div class="card gradient-3" style="height:100%">
+        <div class="card-body p-3">
+            <h5 class="card-title text-white">Filter by Product</h5>
+            <div class="row">
+                <div class="col-lg-4">
+                    <p class="text-white mb-0">Key Word</p>
+                    <input asp-for="StockTransfer.StockType" type="search" placeholder="Key Word" class="form-control searchInput" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,70 @@
+﻿@model CustomerRoute
+
+<form method="post" asp-area="Customer" asp-controller="CustomerRoute" asp-action="Upsert">
+    <input asp-for="Id" hidden />
+    <input asp-for="CreatedBy" hidden />
+    <input asp-for="CreatedDate" hidden />
+
+    <div class="row">
+        <div class="col-12">
+            <div class="border p-3 mt-4 row">
+                <div class="col-12 pb-2">
+                    <h2 class="text-primary">@(Model.Id != 0 ? "Update" : "Create")  Route</h2>
+                    <hr />
+                </div>
+                @*<div asp-validation-summary="All"></div>*@
+                <div class="mb-3 col-4">
+                    <label asp-for="RouteName"></label>
+                    <input asp-for="RouteName" class="form-control" autofocus />
+                    <span asp-validation-for="RouteName" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-4">
+                    <label asp-for="RouteDay"></label>
+                    <input asp-for="RouteDay" class="form-control" />
+                    <span asp-validation-for="RouteDay" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-4">
+                    <label asp-for="SalemanId"></label>
+                    <select asp-for="SalemanId" asp-items="@ViewBag.Saleman" class="form-select">
+                        <option disabled selected>--Select--</option>
+                    </select>
+                    <span asp-validation-for="SalemanId" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-12">
+                    <label asp-for="RouteDetail"></label>
+                    <input asp-for="RouteDetail" class="form-control" />
+                    <span asp-validation-for="RouteDetail" class="text-danger"></span>
+                </div>
+                @if (Model.Id != 0)
+                {
+                    <div class="mb-3">
+                        <label asp-for="IsDisable" class="form-check-label">
+                            <input asp-for="IsDisable" class="form-control form-check-input" /> @Html.DisplayNameFor(model => model.IsDisable)
+                        </label>
+                        <span asp-validation-for="IsDisable" class="text-danger"></span>
+                    </div>
+                }
+
+                <div class="col-12">
+                    @if (Model.Id != 0)
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Update</button>
+                    }
+                    else
+                    {
+                        <button type="submit" onclick="return ValidateInput()" class="btn btn-primary" style="width:150px">Create</button>
+                    }
+                    <a asp-controller="CustomerRoute" asp-action="Index" class="btn btn-secondary" style="width:150px">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts{
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

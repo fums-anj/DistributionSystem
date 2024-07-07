@@ -1,0 +1,51 @@
+﻿@model AccountReceivableVM
+<form method="post" asp-area="Accounts" asp-controller="AccountReceivable" asp-action="UpsertPayCustomer">
+    <input asp-for="accountReceivable.Id" hidden />
+    <input asp-for="accountReceivable.ShopId" hidden />
+    <input asp-for="accountReceivable.CreatedBy" hidden />
+    <input asp-for="accountReceivable.CreatedDate" hidden />
+    <input asp-for="accountReceivable.SaleOrderId" hidden />
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card gradient-2 border" style="height:100%">
+                <div class="card-body p-3">
+                    <h5 class="text-white">Manage Customer Cash</h5>
+                    <div class="row">
+                        <div class="col-3">
+                            <label asp-for="accountReceivable.ShopCustomerId"></label>
+                            <input asp-for="ShopCustomerCodeAndName" list="CustomerdatalistOptions" id="ShopCustomerId" autofocus onfocus="this.value=''" class="form-control" placeholder="Search by: Customer Name, Code..." />
+                            <datalist id="CustomerdatalistOptions">
+                                @foreach (var item in Model.CustomerDataList)
+                                {
+                                    <option>@item.CustomerCode,&nbsp;@item.CustomerName&nbsp;@item.CustomerCity</option>
+                                }
+                            </datalist>
+                            <span asp-validation-for="ShopCustomerCodeAndName" class="text-danger"></span>
+                        </div>
+                        <div class="col-2">
+                            <label asp-for="accountReceivable.ReceivedAmount"></label>
+                            <input asp-for="accountReceivable.ReceivedAmount" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="accountReceivable.ReceivedAmount" class="text-danger"></span>
+                        </div>
+                        <div class="col-3">
+                            <label asp-for="accountReceivable.ReceivedDate"></label>
+                            <input asp-for="accountReceivable.ReceivedDate" class="form-control" />
+                            <span asp-validation-for="accountReceivable.ReceivedDate" class="text-danger"></span>
+                        </div>
+                        <div class="col-3">
+                            <label asp-for="accountReceivable.DocumentType"></label>
+                            <input asp-for="accountReceivable.DocumentType" class="form-control" />
+                            <span asp-validation-for="accountReceivable.DocumentType" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-1 mt-4 text-end">
+                            <button type="submit" class="btn btn-secondary" ><i class="bi bi-plus-circle">&nbsp; Save</i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+

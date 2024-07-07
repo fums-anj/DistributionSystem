@@ -1,0 +1,92 @@
+﻿@model ShopCustomer
+
+<form method="post" asp-area="Customer" asp-controller="ShopCustomer" asp-action="Upsert">
+    <input asp-for="Id" hidden />
+    <input asp-for="CreatedBy" hidden />
+    <input asp-for="CreatedDate" hidden />
+    <input asp-for="CustomerCode" hidden />
+    <input asp-for="ShopId" hidden />
+    <input asp-for="CreateFromPOS" hidden />
+
+    <div class="row">
+        <div class="col-12">
+            <div class="border p-3 mt-4 row">
+                <div class="col-12 pb-2">
+                    <h2 class="text-primary">@(Model.Id != 0 ? "Update" : "Create")  Customer</h2>
+                    <hr />
+                </div>
+                <div class="form-floating mb-3 col-4">
+                    <input asp-for="CustomerName" class="form-control border-1 shadow" autofocus/>
+                    <label asp-for="CustomerName"  class="ms-2 text-muted"></label>
+                    <span asp-validation-for="CustomerName" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3 col-4">
+                    <select asp-for="CustomerRouteId" asp-items="@ViewBag.CustomerRoute" class="form-select border-1 shadow">
+                        <option disabled selected>--Select--</option>
+                    </select>
+                    <label asp-for="CustomerRouteId"  class="ms-2 text-muted"></label>
+                    <span asp-validation-for="CustomerRouteId" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3 col-4">
+                    <input asp-for="CustomerPhone" class="form-control border-1 shadow" />
+                    <label asp-for="CustomerPhone"  class="ms-2 text-muted"></label>
+                    <span asp-validation-for="CustomerPhone" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3 col-4">
+                    <input asp-for="CustomerAddress" class="form-control border-1 shadow" />
+                    <label asp-for="CustomerAddress"  class="ms-2 text-muted"></label>
+                    <span asp-validation-for="CustomerAddress" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3 col-4">
+                    <input asp-for="CustomerCity" class="form-control border-1 shadow" />
+                    <label asp-for="CustomerCity"  class="ms-2 text-muted"></label>
+                    <span asp-validation-for="CustomerCity" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3 col-4">
+                    <input asp-for="PaymentTermsDays" class="form-control border-1 shadow" />
+                    <label asp-for="PaymentTermsDays"  class="ms-2 text-muted"></label>
+                    <span asp-validation-for="PaymentTermsDays" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3 col-4">
+                    <input asp-for="CustomerCode" readonly class="form-control border-1 shadow" autofocus />
+                    <label asp-for="CustomerCode" class="ms-2 text-muted"></label>
+                    <span asp-validation-for="CustomerCode" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3 col-4">
+                    <input asp-for="Balance" readonly class="form-control border-1 shadow" />
+                    <label asp-for="Balance"  class="ms-2 text-muted"></label>
+                    <span asp-validation-for="Balance" class="text-danger"></span>
+                </div>
+                @if (Model.Id != 0)
+                {
+                    <div class="mb-3">
+                        <label asp-for="IsDisable" class="form-check-label">
+                            <input asp-for="IsDisable" class="form-control form-check-input" /> @Html.DisplayNameFor(model => model.IsDisable)
+                        </label>
+                        <span asp-validation-for="IsDisable" class="text-danger"></span>
+                    </div>
+                }
+
+                <div class="col-12">
+                    @if (Model.Id != 0)
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Update</button>
+                    }
+                    else
+                    {
+                        <button type="submit" onclick="return ValidateInput()" class="btn btn-primary" style="width:150px">Create</button>
+                    }
+                    <a asp-controller="ShopCustomer" asp-action="Index" class="btn btn-secondary" style="width:150px">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts{
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

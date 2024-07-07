@@ -1,0 +1,51 @@
+﻿@model Expense
+
+<form method="post" asp-action="Delete">
+	<input asp-for="Id" hidden />
+	<div class="border p-3 mt-4">
+		<div class="row pb-2">
+			<h2 class="text-primary">Delete Expense</h2>
+			<hr />
+		</div>
+		@*<div asp-validation-summary="All"></div>*@
+		<div class="mb-3">
+			<label asp-for="Name"></label>
+			<input asp-for="Name" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
+			<label asp-for="Amount"></label>
+			<input asp-for="Amount" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
+			<label asp-for="Description"></label>
+			<input asp-for="Description" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
+			<label asp-for="CostCenter"></label>
+			<input asp-for="CostCenter" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
+			<label asp-for="ApprovedBy"></label>
+			<input asp-for="ApprovedBy" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
+			<label asp-for="ApprovedDate"></label>
+			<input asp-for="ApprovedDate" disabled class="form-control" />
+		</div>
+		<div class="mb-3">
+			<label asp-for="ExpenseTypeId"></label>
+			<input asp-for="ExpenseType.Name" disabled class="form-control" />
+		</div>
+
+		<button type="submit" class="btn btn-danger" style="width:150px">Delete</button>
+		<a asp-controller="Expense" asp-action="Index" class="btn btn-secondary" style="width:150px">
+			Back to List
+		</a>
+	</div>
+</form>
+
+@section Scripts{
+	@{
+		<partial name="_ValidationScriptsPartial" />
+	}
+}

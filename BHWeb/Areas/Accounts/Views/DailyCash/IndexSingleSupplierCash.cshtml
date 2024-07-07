@@ -1,0 +1,124 @@
+﻿@model ManageCashVM
+@{
+    ViewData["Title"] = "Daily Sale";
+    double TotalDuePayment = 0;
+    double TotalPaid = 0;
+    double TotalPending = 0;
+}
+
+
+<div class="p-3">
+    <form method="post" asp-area="Accounts" asp-controller="DailyCash" asp-action="UpsertPaySupplier">
+        <input asp-for="ManageCash.SupplierId" hidden />
+        <input asp-for="ManageCash.Id" hidden />
+        <input asp-for="ManageCash.ShopId" hidden />
+        <input asp-for="ManageCash.CreatedBy" hidden />
+
+        <div class="row">
+            <div class="col-12">
+                <div class="gradient-2 border p-3 mt-4 row">
+                    <div class="col-12 pb-2">
+                        <h2 class="text-white">Manage Supplier Credit / Debit</h2>
+                    </div>
+                    <div class="col-3">
+                        <div class="mb-3">
+                            <label asp-for="ManageCash.SupplierId"></label>
+                            <select asp-for="ManageCash.SupplierId" asp-items="@Model.SupplierList" required disabled class="form-control">
+                                <option selected disabled>Select</option>
+                            </select>
+                            <span asp-validation-for="ManageCash.SupplierId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="mb-3">
+                            <label asp-for="ManageCash.Credit"></label>
+                            <input asp-for="ManageCash.Credit" class="form-control" autofocus />
+                            <span asp-validation-for="ManageCash.Credit" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <div class="mb-3">
+                            <label asp-for="ManageCash.Debit"></label>
+                            <input asp-for="ManageCash.Debit" class="form-control" />
+                            <span asp-validation-for="ManageCash.Debit" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="mb-3">
+                            <label asp-for="ManageCash.PaymentDate"></label>
+                            <input asp-for="ManageCash.PaymentDate" class="form-control" />
+                            <span asp-validation-for="ManageCash.PaymentDate" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <div class="mt-4 text-end">
+                            <button type="submit" class="btn btn-primary" style="width:150px"><i class="bi bi-plus-circle"></i> &nbsp; Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <br />
+
+    <table id="tblData" class="table table-bordered table-striped zero-configuration" style="width:100%">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.ManageCash.Supplier.PaymentTermsDays)</th>
+                <th>@Html.DisplayNameFor(model => model.ManageCash.SupplierId)</th>
+                <th>@Html.DisplayNameFor(model => model.ManageCash.Credit)</th>
+                <th>@Html.DisplayNameFor(model => model.ManageCash.Debit)</th>
+                <th>@Html.DisplayNameFor(model => model.ManageCash.Balance)</th>
+                <th>@Html.DisplayNameFor(model => model.ManageCash.PaymentDate)</th>
+                <th>@Html.DisplayNameFor(model => model.ManageCash.CreatedBy)</th>
+                <th>@Html.DisplayNameFor(model => model.ManageCash.CreatedDate)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var obj in Model.manageCashList)
+            {
+                TotalDuePayment += (double)obj.Credit;
+                TotalPaid += (double)obj.Debit;
+                TotalPending = TotalDuePayment - TotalPaid;
+                <tr>
+                    <td>
+                        @Html.DisplayFor(m => obj.Supplier.PaymentTermsDays)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(m => obj.Supplier.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(m => obj.Credit)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(m => obj.Debit)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(m => obj.Balance)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(x => obj.PaymentDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(x => obj.ApplicationUser.FullName)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(x => obj.CreatedDate)
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div>
+        <div align="right" class="col-4">
+            <h4 class="text-warning">Total Due Payment = @TotalDuePayment</h4>
+        </div>
+        <div align="right" class="col-4">
+            <h4 class="text-warning">Total Paid = @TotalPaid</h4>
+        </div>
+        <div align="right" class="col-4">
+            <h4 class="text-warning">Total Balance = @TotalPending</h4>
+        </div>
+    </div>
+</div>

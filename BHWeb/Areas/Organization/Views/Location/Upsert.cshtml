@@ -1,0 +1,70 @@
+﻿@model LocationVM
+
+<form method="post" asp-area="Organization" asp-controller="Location" asp-action="Upsert">
+    <input asp-for="Location.Id" hidden />
+    <input asp-for="Location.CreatedBy" hidden />
+    <input asp-for="Location.ProfitCenter" hidden />
+
+    <div class="row">
+        <div class="col-10">
+            <div class="border p-3 mt-4 row">
+                <div class="col-12 pb-2">
+                    <h2 class="text-primary">@(Model.Location.Id != 0 ? "Update" : "Create")  Location</h2>
+                    <hr />
+                </div>
+                @*<div asp-validation-summary="All"></div>*@
+                <div class="mb-3">
+                    <label asp-for="Location.Name"></label>
+                    <input asp-for="Location.Name" class="form-control" />
+                    <span asp-validation-for="Location.Name" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Location.Incharge"></label>
+                    <input asp-for="Location.Incharge" class="form-control" />
+                    <span asp-validation-for="Location.Incharge" class="text-danger"></span>
+                </div>
+                <div class="mb-3 col-6">
+                    <label asp-for="Location.LocationTypeId"></label>
+                    <select asp-for="Location.LocationTypeId" asp-items="@Model.LoctionTypeList" class="form-select">
+                        <option disabled selected>--Select--</option>
+                    </select>
+                    <span asp-validation-for="Location.LocationTypeId" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Location.Address"></label>
+                    <textarea asp-for="Location.Address" rows="3" class="form-control"></textarea>
+                    <span asp-validation-for="Location.Address" class="text-danger"></span>
+                </div>
+                @if (Model.Location.Id != 0)
+                {
+                    <div class="mb-3">
+                        <label asp-for="Location.IsDisable" class="form-check-label">
+                            <input asp-for="Location.IsDisable" class="form-control form-check-input" /> @Html.DisplayNameFor(model => model.Location.IsDisable)
+                        </label>
+                        <span asp-validation-for="Location.IsDisable" class="text-danger"></span>
+                    </div>
+                }
+
+                <div class="col-12">
+                    @if (Model.Location.Id != 0)
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Update</button>
+                    }
+                    else
+                    {
+                        <button type="submit" onclick="return ValidateInput()" class="btn btn-primary" style="width:150px">Create</button>
+                    }
+                    <a asp-controller="Location" asp-action="Index" class="btn btn-secondary" style="width:150px">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts{
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

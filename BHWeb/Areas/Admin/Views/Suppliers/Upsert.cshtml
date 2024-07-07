@@ -1,0 +1,120 @@
+﻿@model Supplier
+@{
+    ViewData["Title"] = Model.Id != 0 ? "Update" : "Create";
+}
+<form method="post" asp-area="Admin" asp-controller="Suppliers" asp-action="Upsert">
+    <input asp-for="Id" hidden />
+    <input asp-for="CreatedBy" hidden />
+    <input asp-for="CreatedDate" hidden />
+    <input asp-for="ShopId" hidden />
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="border p-3 mt-4 row">
+                <div class="col-12 pb-2">
+                    <h2 class="text-primary">@(Model.Id != 0 ? "Update" : "Create")  Supplier</h2>
+                    <hr />
+                </div>
+                <div class="col-4">
+                    <div class="mb-3">
+                        <label asp-for="Name"></label>
+                        <input asp-for="Name" class="form-control" autofocus />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ContactPerson"></label>
+                        <input asp-for="ContactPerson" class="form-control" />
+                        <span asp-validation-for="ContactPerson" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ContactTitle"></label>
+                        <input asp-for="ContactTitle" class="form-control" />
+                        <span asp-validation-for="ContactTitle" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="ContactEmail"></label>
+                        <input asp-for="ContactEmail" class="form-control" />
+                        <span asp-validation-for="ContactEmail" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="mb-3">
+                        <label asp-for="ContactPhone"></label>
+                        <input asp-for="ContactPhone" class="form-control" />
+                        <span asp-validation-for="ContactPhone" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="City"></label>
+                        <input asp-for="City" class="form-control" />
+                        <span asp-validation-for="City" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="State"></label>
+                        <input asp-for="State" class="form-control" />
+                        <span asp-validation-for="State" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Country"></label>
+                        <input asp-for="Country" class="form-control" />
+                        <span asp-validation-for="Country" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="mb-3">
+                        <label asp-for="Address"></label>
+                        <input asp-for="Address" class="form-control" />
+                        <span asp-validation-for="Address" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="LicenseNum"></label>
+                        <input asp-for="LicenseNum" class="form-control" />
+                        <span asp-validation-for="LicenseNum" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="PaymentTermsDays"></label>
+                        <input asp-for="PaymentTermsDays" class="form-control" />
+                        <span asp-validation-for="PaymentTermsDays" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="PaymentMethodId"></label>
+                        <select asp-for="PaymentMethodId" asp-items="@ViewBag.PaymentMethodList" class="form-control">
+                            <option selected disabled>- Select -</option>
+                        </select>
+                        <span asp-validation-for="PaymentMethodId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                @if (Model.Id != 0)
+                {
+                    <div class="mb-3">
+                        <label asp-for="IsDisable" class="form-check-label">
+                            <input asp-for="IsDisable" class="form-control form-check-input" />
+                            @Html.DisplayNameFor(model => model.IsDisable)
+                        </label>
+                        <span asp-validation-for="IsDisable" class="text-danger"></span>
+                    </div>
+                }
+
+                <div class="col-12">
+                    @if (Model.Id != 0)
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Update</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Create</button>
+                    }
+                    <a asp-controller="Suppliers" asp-action="Index" class="btn btn-secondary" style="width:150px">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts{
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

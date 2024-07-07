@@ -1,0 +1,37 @@
+﻿@using BH.Models.SaleManagement
+@using BH.Utility;
+@model IEnumerable<CreditNote>
+@{
+    ViewData["Title"] = "End of day";
+}
+<div class="row pb-3">
+    @foreach (var creditNote in Model)
+    {
+        <div class="col-lg-3 col-md-6">
+            <div class="row p-2">
+                <div class="col-12 p-1" style="border:1px solid #008cba; border-radius: 5px;">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row d-flex justify-content-center">
+                                <div class="col-8 border-bottom row d-flex justify-content-center">
+                                    <div class="d-flex justify-content-center">
+                                        <h3 class="card-title text-primary">Rs&nbsp;@Math.Round((double)creditNote.Cash, 2)</h3>
+                                    </div>
+                                </div>
+                                <p class="card-title text-info"><b>@creditNote.ApplicationUser.FullName</b></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        @if (!User.IsInRole(SDRoles.Role_ShopUser))
+                        {
+                            <a asp-action="EndOfDay" class="btn btn-primary form-control" asp-route-id="@creditNote.Id">
+                                Cash Out
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

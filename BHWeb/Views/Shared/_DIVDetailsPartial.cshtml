@@ -1,0 +1,40 @@
+﻿@model ShopCartVM
+@{
+    var AvailableInputColor = "bg-success text-light";
+    if (Model.AvailableQty <= Model.ShopCart.Variant.LowStockWarningQuantity)
+    {
+        AvailableInputColor = "bg-danger text-light";
+    }
+}
+<input asp-for="ShopCart.Variant.Id" hidden />
+<input asp-for="ShopCart.VariantId" hidden />
+
+<div class="form-floating mb-1 p-0 col-sm-12">
+    <input asp-for="TotalPrice" class="form-control border-1 shadow" />
+    <label asp-for="TotalPrice" class="form-label"></label>
+</div>
+<div class="form-floating mb-1 p-0 col-sm-12">
+    <Select asp-for="ShopCart.UnitOfMeasureId" asp-items="@Model.UnitOfMeasureList" class="form-select border-1 shadow">
+        <option disabled selected>- Select -</option>
+    </Select>
+    <label asp-for="ShopCart.UnitOfMeasure" class="form-label"></label>
+    <span asp-validation-for="ShopCart.UnitOfMeasureId" class="text-danger"></span>
+</div>
+<div class="form-floating mb-1 p-0 col-sm-12">
+    <input asp-for="ShopCart.Variant.Size" readonly class="form-control border-1 shadow" />
+    <label asp-for="ShopCart.Variant.Size" class="form-label"></label>
+    <span asp-validation-for="ShopCart.Variant.Size" class="text-danger"></span>
+</div>
+<div class="form-floating mb-1 p-0 col-sm-12">
+    <input asp-for="AvailableQty" readonly class="form-control border-1 shadow  @AvailableInputColor " />
+    <label asp-for="AvailableQty" class="form-label"></label>
+    <span asp-validation-for="AvailableQty" class="text-danger"></span>
+</div>
+<div class="form-floating mb-1 p-0 col-sm-12 row">
+    <div class="col-sm-2">
+        <input asp-for="IsReturn" class="form-check-input border-1 shadow" />
+    </div>
+    <div class="col-sm-10">
+        <label asp-for="IsReturn" class="form-label"></label>
+    </div>
+</div>

@@ -1,0 +1,219 @@
+﻿@using System.Globalization;
+@model ShopCartVM
+@{
+    ViewData["Title"] = "POS";
+    double RowTotal = 0;
+    var AvailableInputColor = "bg-success";
+}
+<form method="post" asp-area="Customer" asp-controller="POS">
+
+    <div class="row">
+        <div class="input-group mb-1">
+            <a asp-controller="ShopCustomer" asp-action="Upsert" class="btn btn-outline-primary shadow col-sm-2" asp-route-addPOS="add customer from pos">
+                <i class="bi bi-plus-circle"></i> &nbsp; Create New Customer
+            </a>
+            <input asp-for="OrderDate" class="form-control border-1 shadow col-sm-2" />
+            <input asp-for="ShopCustomerId" list="CustomerdatalistOptions" id="ShopCustomerId" autocomplete="off" class="form-control border-1 shadow col-sm-8" placeholder="Customer Name, Code..." />
+            <datalist id="CustomerdatalistOptions">
+                @foreach (var item in Model.CustomerDataList)
+                {
+                    <option>@item.CustomerCode,&nbsp;@item.CustomerName&nbsp;(Rs @item.Balance)&nbsp;@item.CustomerCity&nbsp;@item.CustomerPhone</option>
+                }
+            </datalist>
+        </div>
+        <div class="col-3">
+            <div class="p-1 row">
+                <div class="row">
+                    <div class="form-floating mb-1 p-0 col-sm-12">
+                        <input asp-for="ShopCart.Variant.SKU" list="datalistOptions" id="VariantId" autofocus onfocus="this.value=''" class="form-control  border-1 shadow" placeholder="Variant Name, Code, Barcode..." />
+                        <datalist id="datalistOptions">
+                            @foreach (var item in Model.VariantDataList)
+                            {
+                                <option>@item.VariantCode,&nbsp;@item.Name</option>
+                                @* <option data-value="@item.Id" value="@item.VariantCode">@item.VariantCode&nbsp;@item.Name</option> *@
+                            }
+                        </datalist>
+                        <label class="form-label">Variant Name, Code, Barcode</label>
+                        <span asp-validation-for="ShopCart.Variant.SKU" class="text-danger"></span>
+                    </div>
+                    <div class="form-floating mb-1 p-0 col-sm-12">
+                        <input asp-for="ShopCart.Quantity" class="form-control border-1 shadow" />
+                        <label asp-for="ShopCart.Quantity" class="form-label"></label>
+                        <span asp-validation-for="ShopCart.Quantity" class="text-danger"></span>
+                    </div>
+                    <div id="DIVDetailsPartial">
+                        <div class="form-floating mb-1 p-0 col-sm-12">
+                            <input asp-for="TotalPrice" class="form-control border-1 shadow" />
+                            <label asp-for="TotalPrice" class="form-label"></label>
+                        </div>
+                        <div class="form-floating mb-1 p-0 col-sm-12">
+                            <Select asp-for="ShopCart.UnitOfMeasureId" asp-items="@Model.UnitOfMeasureList" class="form-select border-1 shadow">
+                                <option disabled selected>- Select -</option>
+                            </Select>
+                            <label asp-for="ShopCart.UnitOfMeasure" class="form-label"></label>
+                            <span asp-validation-for="ShopCart.UnitOfMeasureId" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating mb-1 p-0 col-sm-12">
+                            <input asp-for="ShopCart.Variant.Size" readonly class="form-control border-1 shadow" />
+                            <label asp-for="ShopCart.Variant.Size" class="form-label"></label>
+                            <span asp-validation-for="ShopCart.Variant.Size" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating mb-1 p-0 col-sm-12">
+                            <input asp-for="AvailableQty" disabled class="form-control border-1 shadow" />
+                            <label asp-for="AvailableQty" class="form-label"></label>
+                            <span asp-validation-for="AvailableQty" class="text-danger"></span>
+                        </div>
+                        <div class="form-floating mb-1 p-0 col-sm-12 row">
+                            <div class="col-sm-2">
+                                <input asp-for="IsReturn" class="form-check-input border-1 shadow" />
+                            </div>
+                            <div class="col-sm-10">
+                                <label asp-for="IsReturn" class="form-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-floating mx-0 mb-1 p-0 col-sm-12">
+                        <button asp-action="Index" type="submit" class="btn btn-primary shadow col-sm-12">Add to Cart</button>
+                    </div>
+
+                    <div class="form-floating mb-1 p-0 col-sm-12">
+                        <input asp-for="ReceivedAmount" id="rspaid" class="form-control border-1 shadow" />
+                        <label class="form-label">Paid</label>
+                    </div>
+                    <div class="form-floating mx-0 mb-1 p-0 col-sm-12">
+                        <button asp-action="PlaceOrder" type="submit" id="btnPlaceOrderNoPrint" asp-area="Customer" asp-controller="POS" asp-action="PlaceOrder" asp-route-NoPrint="noprint" class="btn btn-secondary col-sm-12">Place Order - F3</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-1 mt-1">Press <button disabled style="width:60px">tab</button> Load Data</div>
+            <div class="mb-1">Press <button disabled style="width:60px">Enter</button> Add to Cart</div>
+            <div class="mb-1">Press <button disabled style="width:60px">F2</button> Place Order & Print</div>
+            <div class="mb-1">Press <button disabled style="width:60px">F4</button> Focus to Paid</div>
+        </div>
+
+        <div class="col-9">
+            <div class="card mt-1">
+                <div class="card-header bg-secondary text-light ml-0">
+                    <div class="row">
+                        <div class="col-6  pt-2">
+                            <i class="fa fa-shopping-cart"></i> &nbsp;
+                            Cart
+                        </div>
+                        <div class="col-6 text-end">
+                            <input asp-action="PlaceOrder" id="btnPlaceOrder" type="submit" value="Place Order & Print" asp-area="Customer" asp-controller="POS" asp-action="PlaceOrder" asp-route-discountPercent="@Model.DiscountPercent" class="btn btn-outline-info btn-sm" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    @if (Model.ListCart != null)
+                    {
+                        @foreach (var item in Model.ListCart)
+                        {
+                            RowTotal = item.Price * item.Quantity;
+                            <div class="row">
+                                <div class="col-12 col-lg-4">
+                                    <h5><strong>@item.Variant.VariantCode &nbsp;@item.Variant.Name</strong></h5>
+                                </div>
+                                <div class="col-12  col-lg-8 text-center row pb-1">
+                                    <div class="col-6 col-lg-8 text-lg-right">
+                                        <strong>
+                                            @item.Price.ToString("C", CultureInfo.CreateSpecificCulture("ur-PK"))
+                                            <span class="text-muted">&nbsp;x&nbsp;</span>@item.Quantity <span class="text-muted">&nbsp;=&nbsp;</span>@RowTotal
+                                        </strong>
+                                    </div>
+                                    <div class="col-6 col-sm-4 col-lg-3">
+                                        <div class="w-50 btn-group" role="group">
+                                            <a asp-action="plus" asp-route-cartId="@item.Id" class="btn btn-primary">
+                                                <i class="bi bi-plus-square"></i>
+                                            </a> &nbsp;
+                                            <a asp-action="minus" asp-route-cartId="@item.Id" class="btn btn-warning">
+                                                <i class="bi bi-dash-square"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-sm-4 col-lg-1 text-right">
+                                        <a asp-action="remove" asp-route-cartId="@item.Id" class="btn btn-danger">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="card-footer">
+                    <div class="row">
+                        @* <div class="col-12 col-lg-4">
+                        <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between bg-light">
+                        <label asp-for="DiscountPercent"></label>
+                        <div>
+                        <input asp-for="DiscountPercent" class="form-control" />
+                        </div>
+                        </li>
+                        </ul>
+                        </div> *@
+
+                        <div class="col-12 col-lg-7">
+                            <h1 id="ordertotal" class="text-danger offset-3 pt-1">@Model.OrderHeader.OrderTotal.ToString("C", CultureInfo.CreateSpecificCulture("ur-PK"))</h1>
+                        </div>
+
+                        @*  <div class="col-12 col-lg-7">
+                        <h1 id="rstotal" class="text-secondary offset-3 pt-1">Rs 0.00</h1>
+                        </div> *@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script type="text/javascript">
+        let sku = document.querySelector('#VariantId');
+        sku.addEventListener('keydown', (ev) => {
+            var kc = ev.keyCode;
+            var Id = ev.target.value;
+            if (kc === 113) {
+                ev.preventDefault();
+                document.getElementById("btnPlaceOrder").click();
+            }
+            if (kc === 114) {
+                ev.preventDefault();
+                document.getElementById("btnPlaceOrderNoPrint").click();
+            }
+            if (kc === 115) {
+                ev.preventDefault();
+                document.getElementById("rspaid").focus();
+            }
+            if (Id == null || Id == "") {
+                return false;
+            }
+            if (kc === 9) {
+                $.ajax(
+                    {
+                        url: "/Customer/POS/GetDIVDetails/" + Id
+                    }
+                ).done(function (divData) {
+                    $("#DIVDetailsPartial").html(divData);
+                });
+            }
+            return false;
+        });
+
+
+        $(function () {
+            $(".select2").select2({
+                selectOnClose: true,
+                placeholder: "Search"
+            });
+        });
+    </script>
+}

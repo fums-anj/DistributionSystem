@@ -1,0 +1,177 @@
+﻿@model StockTransferVM
+@{
+    ViewData["Title"] = Model.StockTransfer.Id != 0 ? "Update Stock" : "Add Stock";
+    string? Code = Context.Request.Query["Code"];
+}
+
+<div class="p-3">
+    @if (Model.StockTransfer.Id == 0)
+    {
+        <form method="post" asp-area="Inventory" asp-controller="StockTransfer" asp-action="Upsert">
+            <input asp-for="StockTransfer.Id" hidden />
+            <div class="col-4">
+                <div class="row mb-3 mt-4">
+                    <div class="input-group">
+                        @* <input asp-for="SKU" autofocus class="form-control" /> *@
+                        <input asp-for="SKU" list="datalistOptions" autofocus onfocus="this.value=''" class="form-control" placeholder="Variant Name, Code, Barcode..." />
+                        <datalist id="datalistOptions">
+                            @foreach (var item in Model.VariantDataList)
+                            {
+                                <option>@item.VariantCode,&nbsp;@item.Name</option>
+                                @* <option value="@item.Id">@item.VariantCode&nbsp;@item.Name</option> *@
+                            }
+                        </datalist>
+                        <span asp-validation-for="SKU" class="text-danger"></span>
+                        <button type="submit" class="btn btn-info" style="width:150px"><i class="bi bi-upc-scan"></i>Search</button>
+                        <span asp-validation-for="SKU" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </form>
+    }
+    <form method="post" asp-area="Inventory" asp-controller="StockTransfer" asp-action="Upsert">
+        <input asp-for="StockTransfer.Id" hidden />
+        <input asp-for="StockTransfer.CreatedBy" hidden />
+        <input asp-for="StockTransfer.CreatedDate" hidden />
+        <input asp-for="StockTransfer.ShopId" hidden />
+        <div class="row">
+            <div class="col-12">
+                <div class="border p-3 mt-4 row">
+                    <div class="col-12 pb-2 row">
+                        <div class="col-9">
+                            <h2 class="text-primary">@(Model.StockTransfer.Id != 0 ? "Update" : "Add")  Stock</h2>
+                        </div>
+                        <div class="col-3">
+                            @if (Model.AvailableQty != null)
+                            {
+                                <h4 class="text-danger">Available Quantity = @Model.AvailableQty</h4>
+                            }
+                        </div>
+                        <hr />
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-4">
+                            <label asp-for="StockTransfer.Variant.ShopProduct.CatalogId"></label>
+                            <select asp-for="StockTransfer.Variant.ShopProduct.CatalogId" id="CatalogId" asp-items="@Model.CatalogList" class="form-control">
+                                <option selected disabled>- Select -</option>
+                            </select>
+                            <span asp-validation-for="StockTransfer.Variant.ShopProduct.CatalogId" class="text-danger"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="StockTransfer.Variant.ShopProductId"></label>
+                            <select asp-for="StockTransfer.Variant.ShopProductId" id="ShopProductId" asp-items="@Model.ShopProductList" class="form-control">
+                                <option selected disabled>- Select -</option>
+                            </select>
+                            <span asp-validation-for="StockTransfer.Variant.ShopProductId" class="text-danger"></span>
+                        </div>
+                        <div class="mb-4">
+                            <label asp-for="StockTransfer.VariantId"></label>
+                            <select asp-for="StockTransfer.VariantId" id="VariantId" asp-items="@Model.VariantList" class="form-control">
+                                <option selected disabled>- Select -</option>
+                            </select>
+                            <span asp-validation-for="StockTransfer.VariantId" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.UnitOfMeasureId"></label>
+                            <select asp-for="StockTransfer.UnitOfMeasureId" id="UnitOfMeasureId" asp-items="@Model.UnitOfMeasureList" class="form-control">
+                                <option selected disabled>- Select -</option>
+                            </select>
+                            <span asp-validation-for="StockTransfer.UnitOfMeasureId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.DocumentRef"></label>
+                            <input asp-for="StockTransfer.DocumentRef" class="form-control" />
+                            <span asp-validation-for="StockTransfer.DocumentRef" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.ReceivingDate"></label>
+                            <input asp-for="StockTransfer.ReceivingDate" class="form-control" />
+                            <span asp-validation-for="StockTransfer.ReceivingDate" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.ExpiryDate"></label>
+                            <input asp-for="StockTransfer.ExpiryDate" class="form-control" />
+                            <span asp-validation-for="StockTransfer.ExpiryDate" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.ReceivedQty"></label>
+                            <input asp-for="StockTransfer.ReceivedQty" class="form-control" />
+                            <span asp-validation-for="StockTransfer.ReceivedQty" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.UnitPurchasePrice"></label>
+                            <input asp-for="StockTransfer.UnitPurchasePrice" class="form-control" />
+                            <span asp-validation-for="StockTransfer.UnitPurchasePrice" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.UnitSellingPrice"></label>
+                            <input asp-for="StockTransfer.UnitSellingPrice" class="form-control" />
+                            <span asp-validation-for="StockTransfer.UnitSellingPrice" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.SupplierId"></label>
+                            <select asp-for="StockTransfer.SupplierId" asp-items="@Model.SupplierList" class="form-control">
+                                <option selected disabled>- Select -</option>
+                            </select>
+                            <span asp-validation-for="StockTransfer.SupplierId" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.LocationId"></label>
+                            <select asp-for="StockTransfer.LocationId" asp-items="@Model.LocationList" class="form-control">
+                                <option selected disabled>- Select -</option>
+                            </select>
+                            <span asp-validation-for="StockTransfer.LocationId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    @if (Model.StockTransfer.Id != 0)
+                    {
+                        <div class="mb-3">
+                            <label asp-for="StockTransfer.IsDisable" class="form-check-label">
+                                <input asp-for="StockTransfer.IsDisable" class="form-control form-check-input" />
+                                @Html.DisplayNameFor(model => model.StockTransfer.IsDisable)
+                            </label>
+                            <span asp-validation-for="StockTransfer.IsDisable" class="text-danger"></span>
+                        </div>
+                        <input asp-for="StockTransfer.StockSoldQty" hidden />
+                        <input asp-for="StockTransfer.StockType" hidden />
+                    }
+
+                    <div class="col-12">
+                        @if (Model.StockTransfer.Id != 0)
+                        {
+                            <button type="submit" class="btn btn-primary" style="width:150px">Update</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-primary" style="width:150px">Purchase Stock</button>
+                        }
+                        @if (Model.StockTransfer.Id == 0)
+                        {
+                            <button type="submit" class="btn btn-outline-warning" style="width:150px" asp-route-StockType=@SDStockType.StockType_StockReturn>Return Stock</button>
+                            <button type="submit" class="btn btn-outline-success" style="width:150px" asp-route-StockType=@SDStockType.StockType_SaleReturn>Return Sale</button>
+                        }
+                        <a asp-controller="StockTransfer" asp-action="Index" class="btn btn-secondary" style="width:150px">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script src="~/js/ddlist.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $("#CatalogId").select2();
+            $("#ShopProductId").select2();
+            $("#VariantId").select2();
+        });
+
+    </script>
+}

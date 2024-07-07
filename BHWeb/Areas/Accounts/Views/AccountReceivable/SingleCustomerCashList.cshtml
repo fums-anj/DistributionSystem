@@ -1,0 +1,161 @@
+﻿@model AccountReceivableVM
+@{
+    ViewData["Title"] = "Customer Account";
+    double TotalDuePayment = 0;
+    double ReceivedAmountCollumn = 0;
+    double CustomerBalance = 0;
+    double TotalPaid = 0;
+    double TotalPrevious = 0;
+    double TotalPending = 0;
+}
+
+
+<div class="p-1">
+    <div class="row">
+        <div class="col-lg-12 col-sm-12">
+            <partial name="_UpsertAccountReceivablePartial" />
+        </div>
+        <div class="col-lg-12 col-sm-12">
+            <form method="post" class="form-horizontal">
+                <input type="hidden" asp-for="@Model.ShopCustomerId" />
+                <div class="row">
+                    <div class="col-lg-12 col-sm-12">
+                        <div class="card gradient-1 border" style="height:100%">
+                            <div class="card-body p-3">
+                                <h5 class="card-title text-white">Filter by Received Date</h5>
+                                <div class="row">
+                                    <div class="col-11">
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <p class="mb-0">From Date </p>
+                                                <input asp-for="ReceivedDateFrom" class="form-control searchDate col-6" placeholder="Registered From" />
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <p class="mb-0">To Date </p>
+                                                <input asp-for="ReceivedDateTo" class="form-control searchDate col-6" placeholder="Registered To" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-1 mt-4  text-end">
+                                        <input asp-action="SingleCustomerCashList" type="submit" id="submitSearch" class="btn btn-danger" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <br />
+    @if (Model.AccountReceivableList.FirstOrDefault() != null)
+    {
+        <div class="dol-md-12 row mb-2">
+
+            <h3 class="col-md-12 text-bg-info">
+                @(Model.AccountReceivableList.FirstOrDefault().ShopCustomer.CustomerCode)
+                @(Model.AccountReceivableList.FirstOrDefault().ShopCustomer.CustomerName)
+                (@Model.AccountReceivableList.FirstOrDefault().ShopCustomer.PaymentTermsDays)
+                @(Model.AccountReceivableList.FirstOrDefault().ShopCustomer.CustomerPhone) - Balance =
+                @(Model.AccountReceivableList.FirstOrDefault().ShopCustomer.Balance)
+            </h3>
+        </div>
+    }
+    <table id="tblData" class="table table-bordered table-striped zero-configuration" style="width:100%">
+        <thead>
+            <tr>
+                <th></th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.SaleOrderId)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.ReceivedDate)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.CreatedDate)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.CreatedBy)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.TotalReceivable)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.ReceivedAmount)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.ShopCustomer.Balance)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.AccountReceivableList != null)
+                foreach (var obj in Model.AccountReceivableList.OrderByDescending(x => x.Id))
+                {
+                    TotalDuePayment += (double)obj.TotalReceivable;
+                    ReceivedAmountCollumn += (double)obj.ReceivedAmount;
+                    if (obj.ReceivedAmount >= 0)
+                    {
+                        TotalPaid += (double)obj.ReceivedAmount;
+                    }
+                    if (obj.ReceivedAmount < 0)
+                    {
+                        TotalPrevious += (double)obj.ReceivedAmount;
+                    }
+                    TotalPending = TotalDuePayment - TotalPaid - TotalPrevious;
+                    CustomerBalance = obj.TotalReceivable - obj.ReceivedAmount;
+                    <tr>
+                        <td>
+                            <div class="w-100 btn-group" role="group">
+                                @if (obj.SaleOrder == null)
+                                {
+                                    <a asp-controller="AccountReceivable" asp-action="Delete" asp-route-id="@obj.Id"
+                                       class="btn btn-danger mx-2"> <i class="bi bi-trash-fill"> Delete</i></a>
+                                }
+                                else
+                                {
+                                    <a asp-area="Customer" asp-controller="POS" asp-action="Index" asp-route-ReLoadOrderId="@obj.SaleOrderId"
+                                       class="btn btn-warning mx-2"> <i class="bi bi-bootstrap-reboot"> Reload</i></a>
+                                    <a asp-area="Customer" asp-controller="POS" asp-action="PlaceOrder" asp-route-PrintSaleOrderId="@obj.SaleOrderId"
+                                       class="btn btn-primary mx-2"> <i class="bi bi-printer-fill"> Print</i></a>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            @Html.DisplayFor(x => obj.SaleOrderId)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(x => obj.ReceivedDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(x => obj.CreatedDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(x => obj.ApplicationUser.FullName)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(m => obj.TotalReceivable)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(m => obj.ReceivedAmount)
+                        </td>
+                        <td align="right">
+                            @CustomerBalance
+                        </td>
+                    </tr>
+                }
+        </tbody>
+        <tfoot>
+            <tr align="right">
+                <th class="w-20" colspan="5">Total</th>
+                <th class="w-20">@TotalDuePayment.ToString("#.##")</th>
+                <th class="w-20">@ReceivedAmountCollumn.ToString("#.##")</th>
+                <th class="w-20">@(TotalDuePayment - ReceivedAmountCollumn)</th>
+                @*<th></th>
+                <th></th>
+                <th class="w-20">@TotalPurchase.ToString("#.##")</th>
+                <th class="w-20 pr-3">@TotalProfitOrLoss.ToString("#.##")&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th> *@
+            </tr>
+        </tfoot>
+    </table>
+    <div>
+        <div align="right" class="col-4 row">
+            <div class="col-9"><h4 class="text-warning">Total Due Payment = </h4></div><div class="col-2"><h4 class="text-warning">@TotalDuePayment</h4></div>
+        </div>
+        <div align="right" class="col-4 row">
+            <div class="col-9"><h4 class="text-warning">Total Piad = </h4></div><div class="col-2"><h4 class="text-warning">@TotalPaid</h4></div>
+        </div>
+        <div align="right" class="col-4 row">
+            <div class="col-9"><h4 class="text-warning">Previous = </h4></div><div class="col-2"><h4 class="text-warning">@(TotalPrevious)</h4></div>
+        </div>
+        <div align="right" class="col-4 row">
+            <div class="col-9"><h4 class="text-warning">Balance = </h4></div><div class="col-2"><h4 class="text-warning">@TotalPending</h4></div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,183 @@
+﻿@model VariantVM
+
+<form method="post" asp-area="ProductManagement" asp-controller="Variant" asp-action="Upsert" enctype="multipart/form-data">
+    <input asp-for="Variant.Id" hidden />
+    <input asp-for="Variant.ImageUrl" hidden />
+
+    <div class="row">
+        <div class="col-10">
+            <div class="border p-3 mt-4 row">
+                <div class="col-12 pb-2">
+                    <h2 class="text-primary">@(Model.Variant.Id != 0 ? "Update" : "Create")  Variant</h2>
+                    <hr />
+                </div>
+                <div class="col-3">
+                    <div class="mb-3">
+                        <label asp-for="Variant.ShopProduct.CatalogId"></label>
+                        <select asp-for="Variant.ShopProduct.CatalogId" id="CatalogId" class="form-control" asp-items="@Model.CatalogList">
+                            <option selected disabled>- Select -</option>
+                        </select>
+                        <span asp-validation-for="Variant.ShopProduct.CatalogId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.ShopProductId"></label>
+                        <select asp-for="Variant.ShopProductId" id="ShopProductId" class="form-control" asp-items="@Model.ShopProductList">
+                            <option selected disabled>- Select -</option>
+                        </select>
+                        <span asp-validation-for="Variant.ShopProductId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.Name"></label>
+                        <input asp-for="Variant.Name" class="form-control" autofocus />
+                        <span asp-validation-for="Variant.Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Variant.Packing"></label>
+                        <input asp-for="Variant.Packing" class="form-control" />
+                        <span asp-validation-for="Variant.Packing" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.UnitOfMeasureId"></label>
+                        <select asp-for="Variant.UnitOfMeasureId" required class="form-control" asp-items="@Model.UnitOfMeasureList">
+                            <option selected disabled>- Select -</option>
+                        </select>
+                        <span asp-validation-for="Variant.UnitOfMeasureId" class="text-danger"></span>
+                    </div>
+
+                </div>
+                <div class="col-3">
+                    <div class="mb-3">
+                        <label asp-for="Variant.Weight"></label>
+                        <input asp-for="Variant.Weight" class="form-control" />
+                        <span asp-validation-for="Variant.Weight" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Variant.LocationId"></label>
+                        <select asp-for="Variant.LocationId" class="form-control" asp-items="@Model.LocationList">
+                            <option selected disabled>- Select -</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.SupplierId"></label>
+                        <select asp-for="Variant.SupplierId" class="form-control" asp-items="@Model.SupplierList">
+                            <option selected disabled>- Select -</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.LowStockWarningQuantity"></label>
+                        <input asp-for="Variant.LowStockWarningQuantity" class="form-control" />
+                        <span asp-validation-for="Variant.LowStockWarningQuantity" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.StorageLocation"></label>
+                        <input asp-for="Variant.StorageLocation" class="form-control" />
+                        <span asp-validation-for="Variant.StorageLocation" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="mb-3">
+                        <label asp-for="Variant.Size"></label>
+                        <input asp-for="Variant.Size" class="form-control" />
+                        <span asp-validation-for="Variant.Size" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.PurchasePrice"></label>
+                        <input asp-for="Variant.PurchasePrice" class="form-control" />
+                        <span asp-validation-for="Variant.PurchasePrice" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.ListPrice"></label>
+                        <input asp-for="Variant.ListPrice" class="form-control" />
+                        <span asp-validation-for="Variant.ListPrice" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.WholesalePrice"></label>
+                        <input asp-for="Variant.WholesalePrice" class="form-control" />
+                        <span asp-validation-for="Variant.WholesalePrice" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.TypeColor"></label>
+                        <input asp-for="Variant.TypeColor" class="form-control" />
+                        <span asp-validation-for="Variant.TypeColor" class="text-danger"></span>
+                    </div>
+
+                </div>
+                <div class="col-3">
+                    <div class="mb-3">
+                        <label asp-for="Variant.PackingSKU"></label>
+                        <input asp-for="Variant.PackingSKU" class="form-control" />
+                        <span asp-validation-for="Variant.PackingSKU" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.SKU"></label>
+                        <input asp-for="Variant.SKU" class="form-control" />
+                        <span asp-validation-for="Variant.SKU" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Variant.ImageUrl"></label>
+                        <input type="file" id="uploadBox" name="file" class="form-control" />
+                    </div>
+                    <div class="mt-6 p-3 row">
+                        <input asp-for="Variant.IsWeight" class="form-control form-check-input" />
+                        @Html.DisplayNameFor(model => model.Variant.IsWeight)
+                        <span asp-validation-for="Variant.IsWeight" class="text-danger"></span>
+                    </div>
+                    <div class="mt-6 p-3 row">
+                        <input asp-for="Variant.IsWithoutStock" class="form-control form-check-input" />
+                        @Html.DisplayNameFor(model => model.Variant.IsWithoutStock)
+                        <span asp-validation-for="Variant.IsWithoutStock" class="text-danger"></span>
+                    </div>
+                    @if (Model.Variant.Id != 0)
+                    {
+                        <div class="mt-3 p-3 row">
+                            <input asp-for="Variant.IsDisable" class="form-control form-check-input" />
+                            @Html.DisplayNameFor(model => model.Variant.IsDisable)
+                            <span asp-validation-for="Variant.IsDisable" class="text-danger"></span>
+                        </div>
+                    }
+                </div>
+                <div class="col-12">
+                    @if (Model.Variant.Id != 0)
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Update</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-primary" style="width:150px">Create</button>
+                        @*<button type="submit" onclick="return ValidateInput()" class="btn btn-primary" style="width:150px">Create</button>*@
+                    }
+                    <a asp-controller="Variant" asp-action="Index" class="btn btn-secondary" style="width:150px">
+                        Back to List
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-2 pt-4">
+            <img src="@Model.Variant.ImageUrl"
+                 width="100%" style="border-radius:5px; border:1px solid #bbb9b9" />
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script>
+        function ValidateInput() {
+            if (document.getElementById("uploadBox").value == "") {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please upload an Image!',
+                });
+                return false;
+            }
+            return true;
+        }
+    </script>
+    <script src="~/js/ddlist.js"></script>
+}

@@ -1,0 +1,73 @@
+﻿@model RouteVM
+@{
+    ViewData["Title"] = "Route Balance Report";
+    decimal? sumOfBalance = 0;
+    int customerCount = 0;
+    int srNo = 0;
+}
+
+<div class="row pt-4">
+    <div class="col-6">
+        <h2 class="text-primary">Route Balance Report</h2>
+    </div>
+</div>
+<br />
+<br />
+<div class="p-1">
+
+    <table id="tblData" class="table table-bordered table-striped zero-configuration">
+        <thead>
+            <tr>
+                <th>Sr#</th>
+                <th>@Html.DisplayNameFor(model => model.CustomerRoute.RouteName)</th>
+                <th>@Html.DisplayNameFor(model => model.CustomerRoute.RouteDay)</th>
+                <th>@Html.DisplayNameFor(model => model.CustomerRoute.RouteDay)</th>
+                <th>@Html.DisplayNameFor(model => model.customerCount)</th>
+                <th>@Html.DisplayNameFor(model => model.RouteBalance)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.RouteListVM != null)
+                foreach (var obj in Model.RouteListVM)
+                {
+                    srNo++;
+                    customerCount += obj.customerCount;
+                    sumOfBalance += obj.RouteBalance;
+                    <tr>
+                        <td>
+                            @srNo
+                        </td>
+                        <td>
+                            @Html.DisplayFor(m => obj.CustomerRoute.RouteName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(m => obj.CustomerRoute.RouteDay)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(m => obj.CustomerRoute.RouteDay)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(m => obj.customerCount)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(m => obj.RouteBalance)
+                        </td>
+                    </tr>
+                }
+        </tbody>
+        <tfoot>
+            <tr align="right">
+                <th colspan="4">Market Value</th>
+                <th>@customerCount.ToString("#.##")</th>
+                <th>@sumOfBalance</th>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+}

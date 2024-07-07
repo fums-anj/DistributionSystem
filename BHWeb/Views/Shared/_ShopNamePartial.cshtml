@@ -1,0 +1,23 @@
+﻿
+@using BH.Utility
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Http
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpContextAccessor Accessor
+@{
+    var sessionValue = "";
+    if (Accessor.HttpContext.Session.GetString("ShopName") != null)
+    {
+        sessionValue = Accessor.HttpContext.Session.GetString("ShopName").ToString();
+    }
+}
+@if (SignInManager.IsSignedIn(User) && User.IsInRole(SDRoles.Role_ShopAdmin))
+{
+    <a class="navbar-brand" asp-area="Identity" asp-page="/Account/Manage/Index">@sessionValue</a>
+}
+else
+{
+    <a class="navbar-brand" href="#">Buy Happily</a>
+}
