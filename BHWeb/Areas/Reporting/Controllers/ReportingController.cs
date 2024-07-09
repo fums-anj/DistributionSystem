@@ -640,10 +640,91 @@ namespace BHWeb.Areas.Reporting.Controllers
             if (obj.AccountReceivableList.Count() != 0)
             {
                 obj.AccountReceivableVMList = obj.AccountReceivableList.OrderByDescending(u => u.Id)
-                                                                   .GroupBy(g => g.CreatedDate.Value.Date)
+                                                    .GroupBy(g => g.CreatedDate.Value.Date)
+                                                    .Select(s => new AccountReceivableVM()
+                                                    {
+                                                        CreatedDate = s.Key,
+                                                        Payable = s.Sum(x => x.TotalReceivable),
+                                                        Paid = s.Where(x => x.ReceivedAmount >= 0).Sum(x => x.ReceivedAmount),
+                                                        OldBalance = s.Where(x => x.ReceivedAmount < 0).Sum(x => x.ReceivedAmount),
+                                                        Balance = s.Sum(x => x.TotalReceivable) - s.Sum(x => x.ReceivedAmount),
+                                                        TotalBalance = s.Sum(x => x.ShopCustomer.Balance),
+                                                        PreviousBalance = s.Sum(x => x.ShopCustomer.Balance) - (s.Sum(x => x.TotalReceivable) - s.Sum(x => x.ReceivedAmount)),
+                                                        Route = s.FirstOrDefault().ShopCustomer.CustomerRoute.RouteName,
+                                                        TermDay = s.FirstOrDefault().ShopCustomer.PaymentTermsDays,
+                                                        TotalExpance = _unitOfWork.Expense.GetAll(x => x.ShopId == applicationUser.ShopId &&
+                                                                                                        x.IsDisable != true &&
+                                                                                                        x.IsDeleted != true &&
+                                                                                                        x.CreatedDate >= s.Key &&
+                                                                                                        x.CreatedDate < s.Key.AddDays(1)).Sum(x => x.Amount),
+                                                        VistedShops = s.Count()
+                                                    }).ToList();
+            }
+
+
+            return View(obj);
+        }
+        public IActionResult CustomerCashMonthWiseReport()
+        {
+            if (applicationUser == null)
+            {
+                applicationUser = _unitOfWork.ApplicationUser.GetFirstOrDefault(u => u.Id == _userId);
+            }
+            AccountReceivableVM obj = new AccountReceivableVM();
+            obj.accountReceivable = new AccountReceivable();
+            obj.RouteList = _unitOfWork.CustomerRoute.GetAll().Where(x => x.ShopId == applicationUser.ShopId).Select(i => new SelectListItem { Text = i.RouteName, Value = i.Id.ToString() });
+            obj.AccountReceivableList = _unitOfWork.AccountReceivable.GetAll(x => x.ShopId == applicationUser.ShopId && x.IsDisable != true && x.IsDeleted != true && x.ShopCustomerId != null && x.CreatedDate >= DateTime.Now.Date.AddDays(-30), includeProperties: "ShopCustomer,ShopCustomer.CustomerRoute");
+
+            obj.AccountReceivableVMList = obj.AccountReceivableList.OrderByDescending(u => u.Id)
+                                            .GroupBy(g => new { Month = g.CreatedDate.Value.Month, Year = g.CreatedDate.Value.Year })
+                                            //.GroupBy(g => g.CreatedDate.Value.Date)
+                                            .Select(s => new AccountReceivableVM()
+                                            {
+                                                month = s.Key.Month,
+                                                year = s.Key.Year,
+                                                Payable = s.Sum(x => x.TotalReceivable),
+                                                Paid = s.Where(x => x.ReceivedAmount >= 0).Sum(x => x.ReceivedAmount),
+                                                OldBalance = s.Where(x => x.ReceivedAmount < 0).Sum(x => x.ReceivedAmount),
+                                                Balance = s.Sum(x => x.TotalReceivable) - s.Sum(x => x.ReceivedAmount),
+                                                TotalBalance = s.Sum(x => x.ShopCustomer.Balance),
+                                                PreviousBalance = s.Sum(x => x.ShopCustomer.Balance) - (s.Sum(x => x.TotalReceivable) - s.Sum(x => x.ReceivedAmount)),
+                                                Route = s.FirstOrDefault().ShopCustomer.CustomerRoute.RouteName,
+                                                TermDay = s.FirstOrDefault().ShopCustomer.PaymentTermsDays,
+                                                TotalExpance = _unitOfWork.Expense.GetAll(x => x.ShopId == applicationUser.ShopId &&
+                                                                                                x.IsDisable != true &&
+                                                                                                x.IsDeleted != true &&
+                                                                                                x.ApprovedDate.Month == s.Key.Month &&
+                                                                                                x.ApprovedDate.Year == s.Key.Year).Sum(x => x.Amount),
+                                                VistedShops = s.Count()
+                                            }).ToList();
+
+
+            return View(obj);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize]
+        public IActionResult CustomerCashMonthWiseReport(AccountReceivableVM obj)
+        {
+            if (applicationUser == null)
+            {
+                applicationUser = _unitOfWork.ApplicationUser.GetFirstOrDefault(u => u.Id == _userId);
+            }
+            obj.accountReceivable = new AccountReceivable();
+            obj.User = applicationUser;
+            obj.ShopCustomerList = _unitOfWork.ShopCustomer.GetAll().Where(x => x.ShopId == applicationUser.ShopId).Select(i => new SelectListItem { Text = i.CustomerName, Value = i.Id.ToString() });
+            obj.RouteList = _unitOfWork.CustomerRoute.GetAll().Where(x => x.ShopId == applicationUser.ShopId).Select(i => new SelectListItem { Text = i.RouteName, Value = i.Id.ToString() });
+            obj.AccountReceivableList = _unitOfWork.AccountReceivable.FilterAccountReceivable(obj);
+            obj.CustomerDataList = _unitOfWork.ShopCustomer.GetAll(x => x.ShopId == applicationUser.ShopId && x.IsDeleted != true && x.IsDisable != true);
+
+            if (obj.AccountReceivableList.Count() != 0)
+            {
+                obj.AccountReceivableVMList = obj.AccountReceivableList.OrderByDescending(u => u.Id)
+                                                                   .GroupBy(g => new { Month = g.CreatedDate.Value.Month, Year = g.CreatedDate.Value.Year })
                                                                    .Select(s => new AccountReceivableVM()
                                                                    {
-                                                                       CreatedDate = s.Key,
+                                                                       month = s.Key.Month,
+                                                                       year = s.Key.Year,
                                                                        Payable = s.Sum(x => x.TotalReceivable),
                                                                        Paid = s.Where(x => x.ReceivedAmount >= 0).Sum(x => x.ReceivedAmount),
                                                                        OldBalance = s.Where(x => x.ReceivedAmount < 0).Sum(x => x.ReceivedAmount),
@@ -655,8 +736,8 @@ namespace BHWeb.Areas.Reporting.Controllers
                                                                        TotalExpance = _unitOfWork.Expense.GetAll(x => x.ShopId == applicationUser.ShopId &&
                                                                                                                       x.IsDisable != true &&
                                                                                                                       x.IsDeleted != true &&
-                                                                                                                      x.CreatedDate >= s.Key &&
-                                                                                                                      x.CreatedDate < s.Key.AddDays(1)).Sum(x => x.Amount),
+                                                                                                                      x.ApprovedDate.Month == s.Key.Month &&
+                                                                                                                      x.ApprovedDate.Year == s.Key.Year).Sum(x => x.Amount),
                                                                        VistedShops = s.Count()
                                                                    }).ToList();
             }

@@ -82,6 +82,8 @@ namespace BH.Models.ViewModels
 
         public ApplicationUser? User { get; set; }
         public int? routeId { get; set; }
+        public int? month { get; set; }
+        public int? year { get; set; }
         
     }
 }
