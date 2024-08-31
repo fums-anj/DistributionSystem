@@ -1,5 +1,4 @@
-﻿using BarcodeLib;
-using BarcodeStandard;
+﻿using BarcodeStandard;
 using BH.DataAccess.Infrastructure.Interface.IRepository;
 using BH.Models.InventoryManagement;
 using BH.Models.OrganizationManagement;
@@ -10,8 +9,10 @@ using BHWeb.Areas.Admin.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using SkiaSharp;
 using System.Drawing;
 using System.Drawing.Imaging;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BHWeb.Areas.ProductManagement.Controllers
 {
@@ -196,12 +197,37 @@ namespace BHWeb.Areas.ProductManagement.Controllers
 			{
 				return NotFound();
 			}
-			Barcode barcode = new Barcode();
-			Image image = barcode.Encode(TYPE.CODE128, SKU, Color.Black, Color.White, 140, 50);
-			using (MemoryStream ms = new MemoryStream())
+			if (string.IsNullOrEmpty(SKU) || SKU.Length != 12 || !SKU.All(char.IsDigit))
 			{
-				image.Save(ms, ImageFormat.Png);
-				ViewBag.Barcode = "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+				return BadRequest("Invalid SKU. Please provide a 12-digit numeric SKU.");
+			}
+			try
+			{
+				Barcode barcode = new Barcode
+				{
+
+					Alignment = AlignmentPositions.Center,
+					Height = 50,
+					Width = 140,
+					BackColor = SKColors.White,
+					ForeColor = SKColors.Black,
+					EncodedType = BarcodeStandard.Type.Ean13,
+				};
+
+				SkiaSharp.SKImage barimage = barcode.Encode("221234567890");
+				using (var ms = new MemoryStream())
+				{
+					using (var data = barimage.Encode(SKEncodedImageFormat.Png, 100))
+					{
+						data.SaveTo(ms);
+					}
+					ViewBag.Barcode = "data:image/png;base64," + Convert.ToBase64String(ms.ToArray());
+				}
+			}
+			catch (Exception ex)
+			{
+				// Log or handle the exception as needed
+				return StatusCode(500, "An error occurred while generating the barcode.");
 			}
 			return View(obj);
 		}
