@@ -10,9 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SkiaSharp;
-using System.Drawing;
-using System.Drawing.Imaging;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BHWeb.Areas.ProductManagement.Controllers
 {
@@ -128,6 +125,14 @@ namespace BHWeb.Areas.ProductManagement.Controllers
 				{
 					obj.Variant.ModifiedBy = _userId;
 					obj.Variant.ModifiedDate = DateTime.Now;
+					if (string.IsNullOrEmpty(obj.Variant.SKU))
+					{
+						obj.Variant.SKU = _unitOfWork.Variant.GenerateSKU(applicationUser.Shop.Name);
+					}
+					if (string.IsNullOrEmpty(obj.Variant.PackingSKU))
+					{
+						obj.Variant.PackingSKU = _unitOfWork.Variant.GenerateSKU(applicationUser.Shop.Name);
+					}
 					_unitOfWork.Variant.Update(obj.Variant);
 					TempData["success"] = "Variant updated successfully";
 				}
@@ -206,7 +211,7 @@ namespace BHWeb.Areas.ProductManagement.Controllers
 				Barcode barcode = new Barcode
 				{
 
-					Alignment = AlignmentPositions.Center,
+					Alignment = AlignmentPositions.Left,
 					Height = 50,
 					Width = 140,
 					BackColor = SKColors.White,
@@ -214,7 +219,7 @@ namespace BHWeb.Areas.ProductManagement.Controllers
 					EncodedType = BarcodeStandard.Type.Ean13,
 				};
 
-				SkiaSharp.SKImage barimage = barcode.Encode("221234567890");
+				SkiaSharp.SKImage barimage = barcode.Encode(SKU);
 				using (var ms = new MemoryStream())
 				{
 					using (var data = barimage.Encode(SKEncodedImageFormat.Png, 100))

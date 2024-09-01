@@ -54,12 +54,11 @@ namespace BH.DataAccess.Infrastructure.Concrete.ProductManagementRepository
         }
         public string GenerateSKU(string shopName)
         {
-            GlobalNumber variable = _db.GlobalNumbers.Where(x => x.Name == "globalnumber").FirstOrDefault();
-            variable.SKU++;
-            _db.SaveChanges();
-            string SKU = DateTime.UtcNow.Year % 100 + DateTime.UtcNow.Month.ToString("d2") + DateTime.UtcNow.Day.ToString("d2") + variable.SKU;
-            return SKU + shopName.Split(" ")[0].Trim();
-        }
+			Random random = new Random();
+			int randomNumber = random.Next(1000, 10000);
+			string SKU = DateTime.UtcNow.Year.ToString("d4") + DateTime.UtcNow.Month.ToString("d2") + DateTime.UtcNow.Day.ToString("d2");
+			return SKU + randomNumber.ToString().Trim();
+		}
         public string GenerateCode()
         {
             GlobalNumber variable = _db.GlobalNumbers.Where(x => x.Name == "globalnumber").FirstOrDefault();
