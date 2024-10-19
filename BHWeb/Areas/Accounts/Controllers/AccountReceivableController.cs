@@ -99,6 +99,25 @@ namespace BHWeb.Areas.Accounts.Controllers
 
             return View(obj);
         }
+        public IActionResult CustomerSalesDetail(int CustomerId)
+        {
+            if (applicationUser == null)
+            {
+                applicationUser = _unitOfWork.ApplicationUser.GetFirstOrDefault(u => u.Id == _userId);
+            }
+            AccountReceivableVM obj = new AccountReceivableVM();
+            obj.ShopCustomerList = _unitOfWork.ShopCustomer.GetAll().Where(x => x.ShopId == applicationUser.ShopId).Select(i => new SelectListItem { Text = i.CustomerName, Value = i.Id.ToString() });
+            obj.accountReceivable = new AccountReceivable();
+            obj.accountReceivable.ShopCustomerId = CustomerId;
+            obj.ShopCustomerId = CustomerId;
+            obj.AccountReceivableList = _unitOfWork.AccountReceivable.GetAll(x => x.ShopId == applicationUser.ShopId && x.IsDisable != true && x.IsDeleted != true && x.ShopCustomerId == CustomerId, includeProperties: "SaleOrder,SaleOrder.Customer");
+            if (obj.AccountReceivableList.Count() == 0)
+            {
+                return RedirectToAction("CustomerCashList");
+            }
+            obj.CustomerDataList = _unitOfWork.ShopCustomer.GetAll(x => x.ShopId == applicationUser.ShopId && x.IsDeleted != true && x.IsDisable != true);
+            return View(obj);
+        }
         public IActionResult SingleCustomerCashList(int CustomerId)
         {
             if (applicationUser == null)

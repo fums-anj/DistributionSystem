@@ -1,9 +1,11 @@
-﻿@model IEnumerable<ShopCustomer>
+﻿@model IEnumerable<ShopCustomerVM>
+
 @{
     ViewData["Title"] = "Route Customer List";
     Layout = "~/Views/Shared/_LayoutNoNAV.cshtml";
     int srno = 0;
     double total = 0;
+    var BGColor = "";
 }
 
 <div class="ignorForPrint">
@@ -20,47 +22,88 @@
 <div class="p-3">
     <div class="row pt-4">
         <div class="col-6">
-            <h2 class="text-primary">@Model.FirstOrDefault().CustomerRoute.RouteName Customer List</h2>
+            <h2 class="text-primary">@Model.FirstOrDefault().Customer.CustomerRoute.RouteName Customer List</h2>
         </div>
     </div>
     <br /><br />
-
     <table id="tblData" class="table table-bordered table-striped" style="width:100%">
         <thead>
             <tr>
                 <th>Sr #</th>
-                <th>@Html.DisplayNameFor(model => model.CustomerName)</th>
-                <th>@Html.DisplayNameFor(model => model.CustomerPhone)</th>
-                <th>@Html.DisplayNameFor(model => model.CustomerAddress)</th>
-                <th>@Html.DisplayNameFor(model => model.Balance)</th>
+                <th>@Html.DisplayNameFor(model => model.Customer.CustomerName)</th>
+                <th>@Html.DisplayNameFor(model => model.Customer.CustomerPhone)</th>
+                <th>@Html.DisplayNameFor(model => model.Customer.CustomerAddress)</th>
+                <th>@Html.DisplayNameFor(model => model.LastReceivedDate)</th>
+                <th>@Html.DisplayNameFor(model => model.LastStockTransferDate)</th>
+                <th>Last Visit</th>
+                <th>@Html.DisplayNameFor(model => model.Customer.Balance)</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var obj in Model)
             {
                 srno++;
-                if (obj.Balance != null)
+                if (obj.Customer.Balance != null)
                 {
+                    total += (double)obj.Customer.Balance;
+                }
+                DateTime currentDate = DateTime.Now.Date;
+                DateTime? largerDate = obj.largerDate;
+                TimeSpan? timeSpan = currentDate.Subtract(largerDate ?? DateTime.MinValue);
 
-                    total += (double)obj.Balance;
-                   
+                // Calculate the total number of days
+                int totalDays = (int)(timeSpan?.TotalDays ?? 0);
+                if(totalDays > 7) BGColor = "bg-danger text-light"; else BGColor = "";
+                
+                // To get months and years, we'll use a more precise method to handle different month lengths
+                int years = currentDate.Year - (largerDate ?? DateTime.MinValue).Year;
+                int months = currentDate.Month - (largerDate?.Month ?? 0);
+
+                // Adjust months and years if the current month is earlier than the month of the larger date
+                if (months < 0)
+                {
+                    years--;
+                    months += 12;
+                }
+
+                // Finally, calculate days by subtracting the day of the month
+                int days = currentDate.Day - (largerDate?.Day ?? 0);
+                if (days < 0)
+                {
+                    months--;
+                    DateTime previousMonth = currentDate.AddMonths(-1);
+                    days += DateTime.DaysInMonth(previousMonth.Year, previousMonth.Month);
                 }
                 <tr>
                     <td>
                         @srno
                     </td>
                     <td>
-                        @Html.DisplayFor(m => obj.CustomerCode) -
-                        @Html.DisplayFor(m => obj.CustomerName)
+
+                        @Html.DisplayFor(m => obj.Customer.CustomerCode) -
+                        @Html.DisplayFor(m => obj.Customer.CustomerName)
                     </td>
                     <td>
-                        @Html.DisplayFor(m => obj.CustomerPhone)
+                        @Html.DisplayFor(m => obj.Customer.CustomerPhone)
                     </td>
                     <td>
-                        @Html.DisplayFor(m => obj.CustomerAddress)
+                        @Html.DisplayFor(m => obj.Customer.CustomerAddress)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(m => obj.LastReceivedDate) -
+                        @if (obj.LastReceivedDate != null)
+                        {
+                            @Html.DisplayFor(m => obj.LastRecovery)
+                        }
+                    </td>
+                    <td>
+                        @Html.DisplayFor(m => obj.LastStockTransferDate)
+                    </td>
+                    <td class="@BGColor">
+                        @years - @months - @days
                     </td>
                     <td align="right">
-                        @Html.DisplayFor(m => obj.Balance)
+                        @Html.DisplayFor(m => obj.Customer.Balance)
                     </td>
                 </tr>
                 total = Math.Round((double)total, 2);
@@ -68,11 +111,13 @@
         </tbody>
         <tfoot>
             <tr align="right">
-                <th class="w-20" colspan="4">Total</th>
+                <th class="w-20" colspan="7">Total</th>
                 <th class="w-20">@total.ToString("#.##")</th>
             </tr>
         </tfoot>
     </table>
+
+
 </div>
 
 @section Scripts {
@@ -80,8 +125,8 @@
         <partial name="_ValidationScriptsPartial" />
     }
     <script>
-        $(document).ready(function () {
-            $("#print").click(function () {
+        $(document).ready(function() {
+            $("#print").click(function() {
                 $(".ignorForPrint").hide();
                 window.print();
                 $(".ignorForPrint").show();
@@ -89,3 +134,4 @@
         });
     </script>
 }
+

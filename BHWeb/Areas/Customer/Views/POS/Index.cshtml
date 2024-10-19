@@ -146,24 +146,13 @@
 
                 <div class="card-footer">
                     <div class="row">
-                        @* <div class="col-12 col-lg-4">
-                        <ul class="list-group">
-                        <li class="list-group-item d-flex justify-content-between bg-light">
-                        <label asp-for="DiscountPercent"></label>
-                        <div>
-                        <input asp-for="DiscountPercent" class="form-control" />
-                        </div>
-                        </li>
-                        </ul>
-                        </div> *@
+                        
 
                         <div class="col-12 col-lg-7">
                             <h1 id="ordertotal" class="text-danger offset-3 pt-1">@Model.OrderHeader.OrderTotal.ToString("C", CultureInfo.CreateSpecificCulture("ur-PK"))</h1>
                         </div>
 
-                        @*  <div class="col-12 col-lg-7">
-                        <h1 id="rstotal" class="text-secondary offset-3 pt-1">Rs 0.00</h1>
-                        </div> *@
+                        
                     </div>
                 </div>
             </div>
