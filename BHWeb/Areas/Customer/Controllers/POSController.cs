@@ -56,11 +56,11 @@ namespace BHWeb.Areas.Customer.Controllers
                 SaleOrderVM.SaleOrderLineList = _unitOfWork.SaleOrderLine.GetAll(u => u.SaleOrderId == ReLoadOrderId, includeProperties: "StockTransfer,Variant");
                 foreach (var item in SaleOrderVM.SaleOrderLineList)
                 {
-                    if (item.StockTransfer.SalesQty < 0)
-                    {
-                        TempData["error"] = "Returned stock could not be Reloaded...";
-                        return RedirectToAction(nameof(Index));
-                    }
+                    //if (item.StockTransfer.SalesQty < 0)
+                    //{
+                    //    TempData["error"] = "Returned stock could not be Reloaded...";
+                    //    return RedirectToAction(nameof(Index));
+                    //}
 
                     OrderReload(item);
 
@@ -114,12 +114,12 @@ namespace BHWeb.Areas.Customer.Controllers
         {
             //This loop will decrease StockSold quantity of purchased Stock and it will iterate when quantity of cart is remaining 
             double tempcartQty = saleOrderLine.StockTransfer.SalesQty;
-            while (tempcartQty > 0)
+            while (tempcartQty != 0)
             {
                 //Get the StockTransfer form database to update the Stock Sold attribute
                 IEnumerable<StockTransfer> stockTransferListDB = _unitOfWork.StockTransfer.GetAll(x => x.VariantId == saleOrderLine.VariantId && x.StockSoldQty != 0 && x.StockType == SDStockType.StockType_Purchase);
-                StockTransfer stockTransferDB = new StockTransfer();
-                if (stockTransferListDB.Count() > 0)
+                StockTransfer stockTransferDB = new();
+                if (stockTransferListDB.Any())
                 {
                     stockTransferDB = stockTransferListDB.OrderBy(x => x.Id).LastOrDefault();
                 }
@@ -130,19 +130,29 @@ namespace BHWeb.Areas.Customer.Controllers
 
                     double cartRemainingQty = tempcartQty;
 
-                    if (cartRemainingQty > 0)
+                    if (cartRemainingQty != 0)
                     {
                         if (cartRemainingQty > stockTransferDB.StockSoldQty)
                         {
                             tempcartQty = stockTransferDB.StockSoldQty;
                             cartRemainingQty -= stockTransferDB.StockSoldQty;
                         }
+                        else if (-cartRemainingQty > stockTransferDB.StockSoldQty)
+                        {
+                            tempcartQty = stockTransferDB.StockSoldQty;
+                            cartRemainingQty += stockTransferDB.StockSoldQty;
+                        }
                         else
                         {
                             cartRemainingQty = 0;
                         }
                         //Manage Sold Quantity in Purchase Stock
-                        stockTransferDB.StockSoldQty = stockTransferDB.StockSoldQty - tempcartQty;
+                        if (cartRemainingQty > 0)
+                        {
+                            stockTransferDB.StockSoldQty = stockTransferDB.StockSoldQty - tempcartQty;
+                        }
+                        else
+                        { stockTransferDB.StockSoldQty = stockTransferDB.StockSoldQty + tempcartQty; }
                         _unitOfWork.StockTransfer.Update(stockTransferDB);
                         _unitOfWork.Save();
 
