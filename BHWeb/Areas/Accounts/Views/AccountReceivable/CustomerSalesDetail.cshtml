@@ -1,0 +1,118 @@
+﻿@model AccountReceivableVM
+@{
+    ViewData["Title"] = "Customer Sale Detials";
+    Layout = "~/Views/Shared/_LayoutNoNAV.cshtml";
+    int srno = 0;
+    double total = 0;
+    var BGColor = "";
+    double TotalDuePayment = 0;
+    double ReceivedAmountCollumn = 0;
+    double CustomerBalance = 0;
+    double TotalPaid = 0;
+    double TotalPrevious = 0;
+    double TotalPending = 0;
+}
+
+<div class="ignorForPrint">
+    <div style="margin-top: 1rem !important; padding-bottom: 0rem !important;">
+        <div class="row">
+            <div class="col-3 d-flex justify-content-between">
+                <button id="print" autofocus class="btn btn-primary col-4">Print</button>
+                <a asp-area="Customer" asp-controller="ShopCustomer" asp-action="Index"
+                   class="btn btn-success mx-2"> <i class="bi bi-bootstrap-reboot"> Customer's List</i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    @if (Model.AccountReceivableList.FirstOrDefault() != null)
+    {
+        <div class="col-md-12 row mb-2">
+            <div class="fs-4 badge ">
+                @(Model.AccountReceivableList.FirstOrDefault().ShopCustomer.CustomerCode)
+                @(Model.AccountReceivableList.FirstOrDefault().ShopCustomer.CustomerName)
+                (@Model.AccountReceivableList.FirstOrDefault().ShopCustomer.PaymentTermsDays)
+                @(Model.AccountReceivableList.FirstOrDefault().ShopCustomer.CustomerPhone) - Balance =
+                @(Model.AccountReceivableList.FirstOrDefault().ShopCustomer.Balance)
+            </div>
+        </div>
+    }
+    <table id="tblData" class="table table-bordered table-striped zero-configuration" style="width:100%; margin:0px; padding:0px">
+        <thead>
+            <tr>
+                <th>Sr #</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.SaleOrderId)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.ReceivedDate)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.CreatedDate)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.TotalReceivable)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.ReceivedAmount)</th>
+                <th>@Html.DisplayNameFor(model => model.accountReceivable.ShopCustomer.Balance)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.AccountReceivableList != null)
+                foreach (var obj in Model.AccountReceivableList)
+                {
+                    srno++;
+                    TotalDuePayment += (double)obj.TotalReceivable;
+                    ReceivedAmountCollumn += (double)obj.ReceivedAmount;
+                    if (obj.ReceivedAmount >= 0)
+                    {
+                        TotalPaid += (double)obj.ReceivedAmount;
+                    }
+                    if (obj.ReceivedAmount < 0)
+                    {
+                        TotalPrevious += (double)obj.ReceivedAmount;
+                    }
+                    TotalPending = TotalDuePayment - TotalPaid - TotalPrevious;
+                    CustomerBalance += obj.TotalReceivable - obj.ReceivedAmount;
+                    <tr>
+                        <td>@srno</td>
+                        <td>
+                            @Html.DisplayFor(x => obj.SaleOrderId)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(x => obj.ReceivedDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(x => obj.CreatedDate)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(m => obj.TotalReceivable)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(m => obj.ReceivedAmount)
+                        </td>
+                        <td align="right">
+                            @CustomerBalance.ToString("0.00")
+                        </td>
+                    </tr>
+                }
+        </tbody>
+        <tfoot>
+            <tr align="right">
+                <th class="w-20" colspan="4">Total</th>
+                <th class="w-20">@TotalDuePayment.ToString("0.00")</th>
+                <th class="w-20">@ReceivedAmountCollumn.ToString("0.00")</th>
+                <th class="w-20">@((TotalDuePayment - ReceivedAmountCollumn).ToString("0.00"))</th>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+
+    }
+    <script>
+        $(document).ready(function() {
+            $("#print").click(function() {
+                $(".ignorForPrint").hide();
+                window.print();
+                $(".ignorForPrint").show();
+            });
+        });
+    </script>
+}

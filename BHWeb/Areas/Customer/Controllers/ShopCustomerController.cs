@@ -32,54 +32,50 @@ namespace BHWeb.Areas.Customer.Controllers
             return View(objList);
         }
 
-		
-		public IActionResult CustomerOfRouteList(int routeId)
-		{
-			try
-			{
-				if (applicationUser == null)
-				{
-					applicationUser = _unitOfWork.ApplicationUser.GetFirstOrDefault(u => u.Id == _userId);
-				}
 
-				var customers = _unitOfWork.ShopCustomer.GetAll(includeProperties: "CustomerRoute")
-					.Where(x => x.ShopId == applicationUser.ShopId && x.CustomerRouteId == routeId);
+        public IActionResult CustomerOfRouteList(int routeId)
+        {
+            try
+            {
+                applicationUser ??= _unitOfWork.ApplicationUser.GetFirstOrDefault(u => u.Id == _userId);
+                var customers = _unitOfWork.ShopCustomer.GetAll(includeProperties: "CustomerRoute")
+                    .Where(x => x.ShopId == applicationUser.ShopId && x.CustomerRouteId == routeId);
                 var AccountReceivables = _unitOfWork.AccountReceivable.GetAll(x => x.ShopId == applicationUser.ShopId &&
-																				   x.ShopCustomer != null && // Ensure ShopCustomer is not null
-																				   x.ShopCustomer.CustomerRouteId == routeId).OrderByDescending(ar => ar.ReceivedDate);
-                var StockTransfers = _unitOfWork.StockTransfer.GetAll(x => x.ShopId == applicationUser.ShopId && 
-																		   x.ShopCustomer != null &&
+                                                                                   x.ShopCustomer != null && // Ensure ShopCustomer is not null
+                                                                                   x.ShopCustomer.CustomerRouteId == routeId).OrderByDescending(ar => ar.ReceivedDate);
+                var StockTransfers = _unitOfWork.StockTransfer.GetAll(x => x.ShopId == applicationUser.ShopId &&
+                                                                           x.ShopCustomer != null &&
                                                                            x.ShopCustomer.CustomerRouteId == routeId).OrderByDescending(st => st.CreatedDate);
-                
-				var viewModel = customers.Select(c => new ShopCustomerVM
-				{
-					Customer = c,
-					LastReceivedDate = AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate,
-					LastRecovery = AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedAmount,
+
+                var viewModel = customers.Select(c => new ShopCustomerVM
+                {
+                    Customer = c,
+                    LastReceivedDate = AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate,
+                    LastRecovery = AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedAmount,
                     LastStockTransferDate = StockTransfers.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.CreatedDate,
 
-					largerDate = (AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate == null) ? StockTransfers.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.CreatedDate :
-									(StockTransfers.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.CreatedDate == null) ? AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate :
+                    largerDate = (AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate == null) ? StockTransfers.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.CreatedDate :
+                                    (StockTransfers.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.CreatedDate == null) ? AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate :
                                     (AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate
-								> StockTransfers.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.CreatedDate) ?
-                                AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate : 
+                                > StockTransfers.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.CreatedDate) ?
+                                AccountReceivables.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.ReceivedDate :
                                 StockTransfers.FirstOrDefault(st => st.ShopCustomerId == c.Id)?.CreatedDate
 
-				}).ToList();
+                }).ToList();
 
-				return View(viewModel);
-			}
-			catch (Exception ex)
-			{
-				// Log error
-				return StatusCode(500, $"Internal server error: {ex.Message}");
-			}
-		}
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
 
 
-		//GET
-		public IActionResult Upsert(int? id, string? addPOS)
+        //GET
+        public IActionResult Upsert(int? id, string? addPOS)
         {
             ViewBag.CustomerRoute = _unitOfWork.CustomerRoute.GetAll().Where(x => x.ShopId == applicationUser.ShopId).Select(i => new SelectListItem { Text = i.RouteName, Value = i.Id.ToString() });
             ShopCustomer shopCoustomer = new();

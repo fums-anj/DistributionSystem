@@ -1,0 +1,13 @@
+﻿@media print {
+    @page {
+        size: A4;
+        margin: 0.3cm;
+    }
+
+    .ignorForPrint {
+        display: none;
+    }
+    body {
+        font-size: 12px; /* Adjust font size for better print scaling */
+    }
+}

@@ -30,7 +30,7 @@ namespace BH.Models.AccountManagement
         [Display(Name = "Receivable")]
         [DisplayFormat(DataFormatString = "{0:n2}", ApplyFormatInEditMode = true)]
         public double TotalReceivable { get; set; }
-        [Display(Name = "Rs. Received")]
+        [Display(Name = "Received")]
         [DisplayFormat(DataFormatString = "{0:n2}", ApplyFormatInEditMode = true)]
         public double ReceivedAmount { get; set; }
         [DataType(DataType.Date)]

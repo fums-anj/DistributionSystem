@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BH.DataAccess.Infrastructure.Interface.IRepository
 {
@@ -17,5 +13,6 @@ namespace BH.DataAccess.Infrastructure.Interface.IRepository
         void Remove(T entity);
         void RemoveRange(IEnumerable<T> entity);
         void AddRange(IEnumerable<T> entity);
+        IEnumerable<SelectListItem> GetSelectList(Func<T, string> text, Func<T, string> value, Expression<Func<T, bool>>? filter = null, string? includeProperties = null);
     }
 }

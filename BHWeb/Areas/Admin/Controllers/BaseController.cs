@@ -1,6 +1,7 @@
 ﻿using BH.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 
 namespace BHWeb.Areas.Admin.Controllers

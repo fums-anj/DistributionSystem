@@ -1,5 +1,6 @@
 ﻿using BH.DataAccess.Data;
 using BH.DataAccess.Infrastructure.Interface.IRepository;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -41,6 +42,15 @@ namespace BH.DataAccess.Infrastructure.Concrete.Repository
             }
             return query.ToList();
         }
+
+        public IEnumerable<SelectListItem> GetSelectList(Func<T, string> text, Func<T, string> value, Expression<Func<T, bool>>? filter = null, string? includeProperties = null)
+        {
+            var items = GetAll(filter, includeProperties);
+            return items.Select(i => new SelectListItem { Text = text(i), Value = value(i) });
+        }
+
+        //public IEnumerable<SelectListItem> GetSelectList<T>(IEnumerable<T> items, Func<T, string> text, Func<T, string> value) =>
+        //   items.Select(i => new SelectListItem { Text = text(i), Value = value(i) });
 
         public T GetFirstOrDefault(Expression<Func<T, bool>> filter, string? includeProperties = null, bool tracked = true)
         {
