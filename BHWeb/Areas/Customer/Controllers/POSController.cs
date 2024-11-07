@@ -37,176 +37,362 @@ namespace BHWeb.Areas.Customer.Controllers
         // WC = WholeSale, ReLoadOrderId = SaleOrderId, CustomerDetail = CustomerId, retainOrderDate = OrderDate if these values are set other wise will be null
         public IActionResult Index(string? WC, int? ReLoadOrderId, string? CustomerDetail, DateTime? retainOrderDate)
         {
-            var claimsIdentity = (ClaimsIdentity)User.Identity;
-            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+            var claim = ((ClaimsIdentity)User.Identity).FindFirst(ClaimTypes.NameIdentifier);
             applicationUser = _unitOfWork.ApplicationUser.GetFirstOrDefault(u => u.Id == _userId);
-            ShopCartVM = new ShopCartVM();
-            ShopCartVM.ShopCart = new();
 
-            ///Reload Block, If EditSaleOrderId has a value then it will load SaleOrderLine data of given SaleOrder Id to ListCart
-            #region Reload Order
-            if (ReLoadOrderId != null)
+            ShopCartVM = new ShopCartVM
             {
-                SaleOrderVM = new SaleOrderVM();
-                SaleOrderVM.SaleOrder = new SaleOrder();
-                AccountReceivable accountReceivable = new AccountReceivable();
+                ShopCart = new ShopCart { Quantity = 1, IsWholesale = !string.IsNullOrEmpty(WC) },
+                OrderDate = retainOrderDate ?? DateTime.Now,
+                ListCart = _unitOfWork.ShopCart
+                    .GetAll(u => u.ApplicationUserId == claim.Value, includeProperties: "Variant")
+                    .OrderByDescending(o => o.Id),
+                OrderHeader = new OrderHeader(),
+                StockTransfer = new StockTransfer(),
+                VariantDataList = _unitOfWork.Variant.GetAll(x => x.ShopId == applicationUser.ShopId && !x.IsDeleted && !x.IsDisable),
+                CustomerDataList = _unitOfWork.ShopCustomer.GetAll(x => x.ShopId == applicationUser.ShopId && !x.IsDeleted && !x.IsDisable),
+                UnitOfMeasureList = _unitOfWork.UnitOfMeasure
+                    .GetAll()
+                    .Where(x => !x.IsDisable)
+                    .Select(i => new SelectListItem { Text = i.Name, Value = i.Id.ToString() })
+                    .ToList()
+            };
 
-                SaleOrderVM.SaleOrder = _unitOfWork.SaleOrder.GetFirstOrDefault(u => u.Id == ReLoadOrderId);
-                accountReceivable = _unitOfWork.AccountReceivable.GetFirstOrDefault(u => u.SaleOrderId == ReLoadOrderId);
-                SaleOrderVM.SaleOrderLineList = _unitOfWork.SaleOrderLine.GetAll(u => u.SaleOrderId == ReLoadOrderId, includeProperties: "StockTransfer,Variant");
-                foreach (var item in SaleOrderVM.SaleOrderLineList)
-                {
-                    //if (item.StockTransfer.SalesQty < 0)
-                    //{
-                    //    TempData["error"] = "Returned stock could not be Reloaded...";
-                    //    return RedirectToAction(nameof(Index));
-                    //}
-
-                    OrderReload(item);
-
-                }
-                if (accountReceivable != null)
-                {
-                    ShopCustomer shopCustomerDB = _unitOfWork.ShopCustomer.GetFirstOrDefault(u => u.Id == accountReceivable.ShopCustomerId);
-                    shopCustomerDB.Balance = shopCustomerDB.Balance + (accountReceivable.ReceivedAmount - accountReceivable.TotalReceivable);
-                    _unitOfWork.AccountReceivable.Remove(accountReceivable);
-                }
-                _unitOfWork.SaleOrder.Remove(SaleOrderVM.SaleOrder);
-                _unitOfWork.SaleOrderLine.RemoveRange(SaleOrderVM.SaleOrderLineList);
-                _unitOfWork.Save();
-            }
-            #endregion
-            ///End of the Reload block
-
-
-            ShopCartVM.ListCart = _unitOfWork.ShopCart.GetAll(u => u.ApplicationUserId == claim.Value, includeProperties: "Variant").OrderByDescending(o => o.Id);
-            ShopCartVM.OrderHeader = new();
-            ShopCartVM.StockTransfer = new();
-            ShopCartVM.VariantDataList = _unitOfWork.Variant.GetAll(x => x.ShopId == applicationUser.ShopId && x.IsDeleted != true && x.IsDisable != true);
-            ShopCartVM.CustomerDataList = _unitOfWork.ShopCustomer.GetAll(x => x.ShopId == applicationUser.ShopId && x.IsDeleted != true && x.IsDisable != true);
-            ShopCartVM.UnitOfMeasureList = new List<SelectListItem>();
-            ShopCartVM.UnitOfMeasureList.AddRange(_unitOfWork.UnitOfMeasure.GetAll().Where(x => x.IsDisable == false).Select(i => new SelectListItem { Text = i.Name, Value = i.Id.ToString() }));
-            ShopCartVM.ShopCart.Quantity = 1;
-            if (!string.IsNullOrEmpty(WC))
-            {
-                ShopCartVM.ShopCart.IsWholesale = true;
-            }
             if (!string.IsNullOrEmpty(CustomerDetail))
             {
                 ShopCartVM.ShopCustomerId = CustomerDetail;
             }
-            if (retainOrderDate != null)
+
+            if (ReLoadOrderId != null)
             {
-                ShopCartVM.OrderDate = retainOrderDate;
+                if (!ReloadOrder(ReLoadOrderId.Value))
+                {
+                    return RedirectToAction(nameof(Index));
+                }
             }
-            else
-            {
-                ShopCartVM.OrderDate = DateTime.Now;
-            }
-            foreach (var cart in ShopCartVM.ListCart)
-            {
-                ShopCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Quantity);
-            }
+
+            ShopCartVM.OrderHeader.OrderTotal = ShopCartVM.ListCart.Sum(cart => cart.Price * cart.Quantity);
             return View(ShopCartVM);
         }
 
-        private void OrderReload(SaleOrderLine saleOrderLine)
+        private bool ReloadOrder(int reLoadOrderId)
         {
-            //This loop will decrease StockSold quantity of purchased Stock and it will iterate when quantity of cart is remaining 
-            double tempcartQty = saleOrderLine.StockTransfer.SalesQty;
-            while (tempcartQty != 0)
+            SaleOrderVM = new SaleOrderVM
             {
-                //Get the StockTransfer form database to update the Stock Sold attribute
-                IEnumerable<StockTransfer> stockTransferListDB = _unitOfWork.StockTransfer.GetAll(x => x.VariantId == saleOrderLine.VariantId && x.StockSoldQty != 0 && x.StockType == SDStockType.StockType_Purchase);
-                StockTransfer stockTransferDB = new();
-                if (stockTransferListDB.Any())
+                SaleOrder = _unitOfWork.SaleOrder.GetFirstOrDefault(u => u.Id == reLoadOrderId),
+                SaleOrderLineList = _unitOfWork.SaleOrderLine
+                    .GetAll(u => u.SaleOrderId == reLoadOrderId, includeProperties: "StockTransfer,Variant")
+            };
+
+            var accountReceivable = _unitOfWork.AccountReceivable.GetFirstOrDefault(u => u.SaleOrderId == reLoadOrderId);
+
+            foreach (var item in SaleOrderVM.SaleOrderLineList)
+            {
+                // Fetch the available quantity for the variant
+                ShopCartVM.AvailableQty = _unitOfWork.StockTransfer.GetStockQuantity(item.Variant.Id, (int)applicationUser.ShopId);
+
+                // Check if the absolute value of SalesQty (return quantity) can be reloaded to the cart
+                if (-item.StockTransfer.SalesQty <= ShopCartVM.AvailableQty)
                 {
-                    stockTransferDB = stockTransferListDB.OrderBy(x => x.Id).LastOrDefault();
+                    ProcessOrderReload(item);
                 }
-
-                //Stock sold column will be changed with amount of cart.Quantity for last received stock transfer 
-                if (stockTransferDB.Id != 0)
+                else
                 {
+                    TempData["error"] = "Returned stock exceeds available stock. Cannot reload...";
+                    return false;
+                }
+            }
 
-                    double cartRemainingQty = tempcartQty;
+            UpdateCustomerBalanceAndRemoveOrder(accountReceivable);
+            return true;
+        }
 
-                    if (cartRemainingQty != 0)
+
+        //private bool ReloadOrder(int reLoadOrderId)
+        //{
+        //    SaleOrderVM = new SaleOrderVM
+        //    {
+        //        SaleOrder = _unitOfWork.SaleOrder.GetFirstOrDefault(u => u.Id == reLoadOrderId),
+        //        SaleOrderLineList = _unitOfWork.SaleOrderLine
+        //            .GetAll(u => u.SaleOrderId == reLoadOrderId, includeProperties: "StockTransfer,Variant")
+        //    };
+
+        //    var accountReceivable = _unitOfWork.AccountReceivable.GetFirstOrDefault(u => u.SaleOrderId == reLoadOrderId);
+
+        //    foreach (var item in SaleOrderVM.SaleOrderLineList)
+        //    {
+        //        if (item.StockTransfer.SalesQty < 0)
+        //        {
+        //            return false;
+        //        }
+        //        ProcessOrderReload(item);
+        //    }
+
+        //    UpdateCustomerBalanceAndRemoveOrder(accountReceivable);
+        //    return true;
+        //}
+
+        private void ProcessOrderReload(SaleOrderLine saleOrderLine)
+        {
+            double tempCartQty = Math.Abs(saleOrderLine.StockTransfer.SalesQty); // Use absolute value for processing quantity
+            bool isReturn = saleOrderLine.StockTransfer.SalesQty < 0; // Flag for returned stock
+
+            while (tempCartQty > 0)
+            {
+                // Get the appropriate stock transfer entry
+                var stockTransferDB = _unitOfWork.StockTransfer
+                    .GetAll(x => x.VariantId == saleOrderLine.VariantId && x.StockType == SDStockType.StockType_Purchase)
+                    .OrderBy(x => x.Id)
+                    .LastOrDefault();
+
+                if (stockTransferDB == null || stockTransferDB.Id == 0) break;
+
+                double cartRemainingQty = tempCartQty;
+
+                if (isReturn)
+                {
+                    // Add quantity back if it's a return
+                    stockTransferDB.StockSoldQty += tempCartQty;
+                    tempCartQty = 0; // Fully processed as one addition
+                }
+                else
+                {
+                    // Handle as a regular sale (decrease `StockSoldQty`)
+                    if (cartRemainingQty > stockTransferDB.StockSoldQty)
                     {
-                        if (cartRemainingQty > stockTransferDB.StockSoldQty)
-                        {
-                            tempcartQty = stockTransferDB.StockSoldQty;
-                            cartRemainingQty -= stockTransferDB.StockSoldQty;
-                        }
-                        else if (-cartRemainingQty > stockTransferDB.StockSoldQty)
-                        {
-                            tempcartQty = stockTransferDB.StockSoldQty;
-                            cartRemainingQty += stockTransferDB.StockSoldQty;
-                        }
-                        else
-                        {
-                            cartRemainingQty = 0;
-                        }
-                        //Manage Sold Quantity in Purchase Stock
-                        if (cartRemainingQty > 0)
-                        {
-                            stockTransferDB.StockSoldQty = stockTransferDB.StockSoldQty - tempcartQty;
-                        }
-                        else
-                        { stockTransferDB.StockSoldQty = stockTransferDB.StockSoldQty + tempcartQty; }
-                        _unitOfWork.StockTransfer.Update(stockTransferDB);
-                        _unitOfWork.Save();
-
-                        tempcartQty = cartRemainingQty;
+                        tempCartQty = stockTransferDB.StockSoldQty;
+                        cartRemainingQty -= stockTransferDB.StockSoldQty;
                     }
+                    else
+                    {
+                        cartRemainingQty = 0;
+                    }
+
+                    stockTransferDB.StockSoldQty -= tempCartQty;
+                    tempCartQty = cartRemainingQty;
                 }
+
+                // Update and save changes to StockTransfer
+                _unitOfWork.StockTransfer.Update(stockTransferDB);
+                _unitOfWork.Save();
             }
 
-            //Here we add the cart to the POS or Reloading Order
-            ShopCart cartFromDb = new ShopCart();
-            ShopCart cart = new();
-            cartFromDb = _unitOfWork.ShopCart.GetFirstOrDefault(u => u.ApplicationUserId == _userId && u.VariantId == saleOrderLine.VariantId);
-            if (cartFromDb == null)
+            AddOrUpdateShopCart(saleOrderLine);
+            ProcessCreditNoteAdjustment(saleOrderLine);
+            RemoveStockTransfer(saleOrderLine);
+        }
+
+
+        //private void ProcessOrderReload(SaleOrderLine saleOrderLine)
+        //{
+        //    double tempCartQty = saleOrderLine.StockTransfer.SalesQty;
+
+        //    while (tempCartQty > 0)
+        //    {
+        //        var stockTransferDB = _unitOfWork.StockTransfer
+        //            .GetAll(x => x.VariantId == saleOrderLine.VariantId && x.StockSoldQty != 0 && x.StockType == SDStockType.StockType_Purchase)
+        //            .OrderBy(x => x.Id)
+        //            .LastOrDefault();
+
+        //        if (stockTransferDB == null || stockTransferDB.Id == 0) break;
+
+        //        double cartRemainingQty = tempCartQty;
+
+        //        if (cartRemainingQty > stockTransferDB.StockSoldQty)
+        //        {
+        //            tempCartQty = stockTransferDB.StockSoldQty;
+        //            cartRemainingQty -= stockTransferDB.StockSoldQty;
+        //        }
+        //        else
+        //        {
+        //            cartRemainingQty = 0;
+        //        }
+
+        //        stockTransferDB.StockSoldQty -= tempCartQty;
+        //        _unitOfWork.StockTransfer.Update(stockTransferDB);
+        //        _unitOfWork.Save();
+
+        //        tempCartQty = cartRemainingQty;
+        //    }
+
+        //    AddOrUpdateShopCart(saleOrderLine);
+        //    ProcessCreditNoteAdjustment(saleOrderLine);
+        //    RemoveStockTransfer(saleOrderLine);
+        //}
+
+        private void AddOrUpdateShopCart(SaleOrderLine saleOrderLine)
+        {
+            // Check if it's a return; do nothing if SalesQty is negative
+            if (saleOrderLine.StockTransfer.SalesQty < 0)
             {
-                cart.VariantId = saleOrderLine.VariantId;
-                cart.Quantity = saleOrderLine.StockTransfer.SalesQty;
-                cart.ApplicationUserId = saleOrderLine.StockTransfer.ApplicationUser.Id;
-                cart.UnitOfMeasureId = saleOrderLine.StockTransfer.UnitOfMeasureId;
-                cart.Price = saleOrderLine.StockTransfer.UnitSellingPrice;
-                cart.Discount = saleOrderLine.StockTransfer.Discount;
-                cart.DiscountPercent = saleOrderLine.StockTransfer.DiscountPercent;
-                _unitOfWork.ShopCart.Add(cart);
-                _unitOfWork.Save();
+                TempData["info"] = "Returned to customer. Cannot reload...";
+                return; // Exit the method for returns, no cart update required
+            }
+
+            var existingCart = _unitOfWork.ShopCart
+                .GetFirstOrDefault(u => u.ApplicationUserId == _userId && u.VariantId == saleOrderLine.VariantId);
+
+            if (existingCart == null)
+            {
+                // Add new cart entry
+                var newCart = new ShopCart
+                {
+                    VariantId = saleOrderLine.VariantId,
+                    Quantity = saleOrderLine.StockTransfer.SalesQty,
+                    ApplicationUserId = saleOrderLine.StockTransfer.ApplicationUser.Id,
+                    UnitOfMeasureId = saleOrderLine.StockTransfer.UnitOfMeasureId,
+                    Price = saleOrderLine.StockTransfer.UnitSellingPrice,
+                    Discount = saleOrderLine.StockTransfer.Discount,
+                    DiscountPercent = saleOrderLine.StockTransfer.DiscountPercent
+                };
+                _unitOfWork.ShopCart.Add(newCart);
             }
             else
             {
-                _unitOfWork.ShopCart.IncrementCount(cartFromDb, saleOrderLine.StockTransfer.SalesQty);
-                _unitOfWork.Save();
+                // Increment the quantity for existing cart entry
+                _unitOfWork.ShopCart.IncrementCount(existingCart, saleOrderLine.StockTransfer.SalesQty);
             }
 
-            CreditNote = _unitOfWork.CreditNote.GetFirstOrDefault(u => u.CreatedBy == _userId && u.CashOut == false);
-            if (CreditNote == null)
-            {
-                CreditNote = new CreditNote();
-                CreditNote.CreatedBy = _userId;
-                CreditNote.CreatedDate = DateTime.Now;
-                CreditNote.ShopId = saleOrderLine.StockTransfer.ShopId;
-                CreditNote.CashOut = false;
-                CreditNote.Cash = -(double)(saleOrderLine.StockTransfer.SalesQty * saleOrderLine.StockTransfer.UnitSellingPrice - (double)saleOrderLine.StockTransfer.Discount - (double)saleOrderLine.StockTransfer.DiscountPercent);
-                _unitOfWork.CreditNote.Add(CreditNote);
-                _unitOfWork.Save();
-            }
-            else
-            {
-                CreditNote.Cash -= (double)(saleOrderLine.StockTransfer.SalesQty * saleOrderLine.StockTransfer.UnitSellingPrice - saleOrderLine.StockTransfer.Discount - saleOrderLine.StockTransfer.DiscountPercent);
-                _unitOfWork.CreditNote.Update(CreditNote);
-                _unitOfWork.Save();
-            }
-
-
-            StockTransfer tempstockTransfer = _unitOfWork.StockTransfer.GetFirstOrDefault(x => x.Id == saleOrderLine.StockTransferId);
-            _unitOfWork.StockTransfer.Remove(tempstockTransfer);
             _unitOfWork.Save();
         }
+
+
+
+        //private void AddOrUpdateShopCart(SaleOrderLine saleOrderLine)
+        //{
+        //    var existingCart = _unitOfWork.ShopCart
+        //        .GetFirstOrDefault(u => u.ApplicationUserId == _userId && u.VariantId == saleOrderLine.VariantId);
+
+        //    if (existingCart == null)
+        //    {
+        //        var newCart = new ShopCart
+        //        {
+        //            VariantId = saleOrderLine.VariantId,
+        //            Quantity = saleOrderLine.StockTransfer.SalesQty,
+        //            ApplicationUserId = saleOrderLine.StockTransfer.ApplicationUser.Id,
+        //            UnitOfMeasureId = saleOrderLine.StockTransfer.UnitOfMeasureId,
+        //            Price = saleOrderLine.StockTransfer.UnitSellingPrice,
+        //            Discount = saleOrderLine.StockTransfer.Discount,
+        //            DiscountPercent = saleOrderLine.StockTransfer.DiscountPercent
+        //        };
+        //        _unitOfWork.ShopCart.Add(newCart);
+        //    }
+        //    else
+        //    {
+        //        _unitOfWork.ShopCart.IncrementCount(existingCart, saleOrderLine.StockTransfer.SalesQty);
+        //    }
+
+        //    _unitOfWork.Save();
+        //}
+
+        private void ProcessCreditNoteAdjustment(SaleOrderLine saleOrderLine)
+        {
+            CreditNote ??= _unitOfWork.CreditNote.GetFirstOrDefault(u => u.CreatedBy == _userId && !u.CashOut);
+
+            double adjustmentAmount = saleOrderLine.StockTransfer.SalesQty * saleOrderLine.StockTransfer.UnitSellingPrice
+                                      - saleOrderLine.StockTransfer.Discount - saleOrderLine.StockTransfer.DiscountPercent;
+
+            if (CreditNote == null)
+            {
+                CreditNote = new CreditNote
+                {
+                    CreatedBy = _userId,
+                    CreatedDate = DateTime.Now,
+                    ShopId = saleOrderLine.StockTransfer.ShopId,
+                    CashOut = false,
+                    Cash = saleOrderLine.StockTransfer.SalesQty < 0 ? adjustmentAmount : -adjustmentAmount
+                };
+                _unitOfWork.CreditNote.Add(CreditNote);
+            }
+            else
+            {
+                if (saleOrderLine.StockTransfer.SalesQty < 0)
+                {
+                    CreditNote.Cash += adjustmentAmount;  // Increase credit note for returns
+                }
+                else
+                {
+                    CreditNote.Cash -= adjustmentAmount;  // Decrease for regular sales
+                }
+                _unitOfWork.CreditNote.Update(CreditNote);
+            }
+
+            _unitOfWork.Save();
+        }
+
+
+        //private void ProcessCreditNoteAdjustment(SaleOrderLine saleOrderLine)
+        //{
+        //    CreditNote ??= _unitOfWork.CreditNote.GetFirstOrDefault(u => u.CreatedBy == _userId && !u.CashOut);
+
+        //    double adjustmentAmount = saleOrderLine.StockTransfer.SalesQty * saleOrderLine.StockTransfer.UnitSellingPrice
+        //                              - saleOrderLine.StockTransfer.Discount - saleOrderLine.StockTransfer.DiscountPercent;
+
+        //    if (CreditNote == null)
+        //    {
+        //        CreditNote = new CreditNote
+        //        {
+        //            CreatedBy = _userId,
+        //            CreatedDate = DateTime.Now,
+        //            ShopId = saleOrderLine.StockTransfer.ShopId,
+        //            CashOut = false,
+        //            Cash = -adjustmentAmount
+        //        };
+        //        _unitOfWork.CreditNote.Add(CreditNote);
+        //    }
+        //    else
+        //    {
+        //        CreditNote.Cash -= adjustmentAmount;
+        //        _unitOfWork.CreditNote.Update(CreditNote);
+        //    }
+
+        //    _unitOfWork.Save();
+        //}
+
+        private void RemoveStockTransfer(SaleOrderLine saleOrderLine)
+        {
+            var tempStockTransfer = _unitOfWork.StockTransfer.GetFirstOrDefault(x => x.Id == saleOrderLine.StockTransferId);
+            _unitOfWork.StockTransfer.Remove(tempStockTransfer);
+            _unitOfWork.Save();
+        }
+
+
+        //private void RemoveStockTransfer(SaleOrderLine saleOrderLine)
+        //{
+        //    var tempStockTransfer = _unitOfWork.StockTransfer.GetFirstOrDefault(x => x.Id == saleOrderLine.StockTransferId);
+        //    _unitOfWork.StockTransfer.Remove(tempStockTransfer);
+        //    _unitOfWork.Save();
+        //}
+
+        private void UpdateCustomerBalanceAndRemoveOrder(AccountReceivable accountReceivable)
+        {
+            if (accountReceivable != null)
+            {
+                var shopCustomerDB = _unitOfWork.ShopCustomer.GetFirstOrDefault(u => u.Id == accountReceivable.ShopCustomerId);
+                shopCustomerDB.Balance += (accountReceivable.ReceivedAmount - accountReceivable.TotalReceivable);
+                _unitOfWork.AccountReceivable.Remove(accountReceivable);
+            }
+
+            _unitOfWork.SaleOrder.Remove(SaleOrderVM.SaleOrder);
+            _unitOfWork.SaleOrderLine.RemoveRange(SaleOrderVM.SaleOrderLineList);
+            _unitOfWork.Save();
+        }
+
+
+        //private void UpdateCustomerBalanceAndRemoveOrder(AccountReceivable accountReceivable)
+        //{
+        //    if (accountReceivable != null)
+        //    {
+        //        var shopCustomerDB = _unitOfWork.ShopCustomer.GetFirstOrDefault(u => u.Id == accountReceivable.ShopCustomerId);
+        //        shopCustomerDB.Balance += (accountReceivable.ReceivedAmount - accountReceivable.TotalReceivable);
+        //        _unitOfWork.AccountReceivable.Remove(accountReceivable);
+        //    }
+
+        //    _unitOfWork.SaleOrder.Remove(SaleOrderVM.SaleOrder);
+        //    _unitOfWork.SaleOrderLine.RemoveRange(SaleOrderVM.SaleOrderLineList);
+        //    _unitOfWork.Save();
+        //}
+
 
         [HttpPost]
         [ActionName("Index")]

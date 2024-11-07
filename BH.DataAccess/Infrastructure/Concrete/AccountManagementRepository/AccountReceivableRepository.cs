@@ -93,7 +93,7 @@ namespace BH.DataAccess.Infrastructure.Concrete.AccountManagementRepository
                                        !x.IsDeleted &&
                                        x.ShopCustomerId != null);
 
-            if (accountReceivableVM.routeId != 0)
+            if (accountReceivableVM.routeId != 0 && accountReceivableVM.routeId != null)
             {
                 query = query.Where(x => x.ShopCustomer.CustomerRouteId == accountReceivableVM.routeId);
             }
