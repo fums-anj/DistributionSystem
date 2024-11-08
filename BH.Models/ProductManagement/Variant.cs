@@ -51,7 +51,7 @@ namespace BH.Models.ProductManagement
         [Display(Name = "Supplier")]
         public int? SupplierId { get; set; }
         [ValidateNever]
-        public Supplier? Supplier { get; set; }
+        public ICollection<Supplier> Suppliers { get; set; }
 
         //
         [Display(Name = "UOM")]
@@ -64,6 +64,6 @@ namespace BH.Models.ProductManagement
         public int ShopProductId { get; set; }
         [ForeignKey("ShopProductId")]
         [ValidateNever]
-        public ShopProduct? ShopProduct { get; set; }
+        public ICollection<ShopProduct> ShopProducts { get; set; }
     }
 }

@@ -10,11 +10,5 @@ namespace BH.Models.ProductManagement
         [Required]
         public string Name { get; set; }
 
-        [Required]
-        [Display(Name = "Location")]
-        public int LocationId { get; set; }
-        [ForeignKey("LocationId")]
-        [ValidateNever]
-        public Location? Location { get; set; }
     }
 }

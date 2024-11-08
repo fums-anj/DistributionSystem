@@ -19,9 +19,6 @@ namespace BH.Models.ProductManagement
         public int? CatalogId { get; set; }
         [ForeignKey("CatalogId")]
         [ValidateNever]
-        public Catalog? Catalog { get; set; }
-
-        [Display(Name = "Location")]
-        public int? LocationId { get; set; }
+        public ICollection<Catalog> Catalogs { get; set; }
     }
 }
